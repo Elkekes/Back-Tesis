@@ -20,5 +20,5 @@ router.delete("/anuncios/:id_anuncio", controles_anuncios.delete_anuncios);
 router.get("/last/post/:id_usuario", controles_anuncios.get_UltimoAnuncio);
 router.get("/anuncios/perfil/:id_anuncio", controles_anuncios.get_AnuncioInfo);
 router.get("/anuncios/imagenes/:id_anuncio", controles_anuncios.get_AnuncioImg);
-
+router.get("/anuncios/publicaciones/:id_usuario", controles_anuncios.get_publicaciones);
 export default router;
