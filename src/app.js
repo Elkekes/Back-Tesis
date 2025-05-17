@@ -73,6 +73,7 @@ app.use("/", rutas_servicios);
 
 // Archivos estaticos
 app.use(express.static(path.join(__dirname, 'public')));
+//app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 //{
 // Archivos Estáticos que permiten relacionar con la aplicacion de angular medinte la carpeta "dist" que contiene todos los archivos.

@@ -11,6 +11,9 @@ router.get("/imagenes/:id", controles_imagenes.get_imagenes);
 router.get("/imagen", controles_imagenes.get_imagen_principal);
 router.post("/imagen/upload/:id_anuncio/:num_imagen", controles_imagenes.post_imagen_serv);
 router.put("/imagen/:direccion", controles_imagenes.put_imagen);
-router.delete("/imagen/:direccion", controles_imagenes.delete_imagen);
+//router.delete("/imagen/:direccion", controles_imagenes.delete_imagen);
 
-export default router;
+router.delete("/imagen/url", controles_imagenes.delete_imagen);
+//router.delete("/imagen/id/:id", controles_imagenes.delete_imagen_por_id);
+
+export default router; //exportamos 
