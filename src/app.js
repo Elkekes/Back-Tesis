@@ -1,4 +1,5 @@
 import express from "express";
+import { init_conexion } from "./bd/bd_conexion.js";
 import morgan from "morgan";
 import path from "path";
 import cors from 'cors';
