@@ -1,3 +1,4 @@
+
 //Muestra un mensage de error al ocurrir alguna falla en las consultas a la base de datos.
 export const mensaje_error = (response, mensajePersonalizado, error) => {
     console.error(`❌ ${mensajePersonalizado}:`, error.message);
