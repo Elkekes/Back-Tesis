@@ -9,7 +9,7 @@ const inicio_conexion = async () => {
     //Manejador de errores en caso de falla en la conexión con la base de datos.
     try {
         conexion = await mysql.createConnection({
-        // Asignamos las variables de conexión importadas desde config.js.
+            // Asignamos las variables de conexión importadas desde config.js.
             host: config.host,
             database: config.database,
             user: config.user,
