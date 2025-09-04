@@ -5,6 +5,6 @@ config();// Permite utilizar las variables de entorno declaras en el archivo ".e
 export default{
     host: process.env.HOST || "",
     database: process.env.DATABASE || "",
-    user: process.env.USER || "",
+    user: process.env.DB_USER || "",
     password: process.env.PASSWORD || ""
 }

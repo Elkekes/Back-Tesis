@@ -1,5 +1,5 @@
 import {inicio_conexion} from "./../bd/bd_conexion.js";
-import { mensaje_error,mensaje_consultas } from "../mensajes/mensajes_consultas.js";
+import { mensaje_error,mensaje_consultas, mensaje_GET } from "../mensajes/mensajes_consultas.js";
 
 // Petición asincrona para optener un solo anuncio.
 const get_anuncio = async(request, response) =>
@@ -19,7 +19,7 @@ const get_anuncio = async(request, response) =>
         );
 
         //Llamado a función que muestra y envía el resultado de las consultas.
-        return mensaje_consultas(response, resultado); 
+        return mensaje_GET(response, resultado); 
 
     }catch(error){
         //Llamado a función que muestra y envía los posibles errores.

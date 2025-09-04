@@ -9,14 +9,14 @@ const inicio_conexion = async () => {
     //Manejador de errores en caso de falla en la conexión con la base de datos.
     try {
         conexion = await mysql.createConnection({
-        // Asignamos las variables de conexión importadas desde config.js.
-        host: config.host,
-        database: config.database,
-        user: config.user,
-        password: config.password
-    });
-    console.log("✅ Conexión establecida con RDS.");
-    return conexion; // Retorno la conexión para las consultas.
+            // Asignamos las variables de conexión importadas desde config.js.
+            host: config.host,
+            database: config.database,
+            user: config.user,
+            password: config.password
+        });
+        console.log("✅ Conexión establecida con RDS.");
+        return conexion; // Retorno la conexión para las consultas.
     
     } catch (error) {   
         console.error("❌ Error al conectar con la base de datos:", error.message), ".";
