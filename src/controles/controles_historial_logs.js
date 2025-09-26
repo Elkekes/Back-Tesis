@@ -1,11 +1,11 @@
-import {get_conexion} from "./../bd/bd_conexion.js";
+import {inicio_conexion} from "./../bd/bd_conexion.js";
 
 // Petición asincrona de todos los accesos.
 const get_logs = async(request, response) =>
 {
     try{
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_log, id_usuario, fecha, hora FROM tab_historial_logs");
         //response.json("Mensaje de prueba jsjsjsjsj");
@@ -16,7 +16,10 @@ const get_logs = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    } 
 };
 
 // Petición asincrona para optener un solo acceso.
@@ -33,7 +36,7 @@ const get_log = async(request, response) =>
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
         const resultado = await conexion.query("SELECT id_log, id_usuario, fecha, hora FROM tab_historial_logs WHERE id_log = ?", id);
@@ -44,7 +47,10 @@ const get_log = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    } 
 };
 
 
@@ -65,7 +71,7 @@ const post_log = async(request, response) =>
         const acceso = {id_usuario, fecha, hora};
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         // Inserción SQl a la tabla. 
         const resultado = await conexion.query("INSERT INTO tab_historial_logs SET ?", acceso );
         console.log(resultado);
@@ -75,7 +81,10 @@ const post_log = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    } 
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    } 
 };
 
 // Petición asincrona para eliminar un solo anuncio.
@@ -92,7 +101,7 @@ const delete_log = async(request, response) =>
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("DELETE FROM tab_historial_logs WHERE id_log = ?", id); // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
         console.log(resultado);
@@ -102,6 +111,9 @@ const delete_log = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
     }  
 };
 

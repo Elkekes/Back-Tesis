@@ -16,6 +16,9 @@ const get_favoritos = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
     }  
 };
 
@@ -44,7 +47,10 @@ const get_favorito = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }    
 };
 
 
@@ -75,7 +81,10 @@ const post_favorito = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }    
 };
 
 
@@ -103,7 +112,10 @@ const delete_favorito = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }    
 };
 
 export const metodos = {

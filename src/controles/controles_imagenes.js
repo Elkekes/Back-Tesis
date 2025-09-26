@@ -1,4 +1,4 @@
-import {get_conexion} from "../bd/bd_conexion.js";
+import {inicio_conexion} from "../bd/bd_conexion.js";
 
 /*Declaracion Costante que que sirve para trabajar con rutas de archivos y
 directorios de manera segura, independiente del sistema operativo.*/ 
@@ -20,7 +20,7 @@ const get_imagenes = async(request, response) =>
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen  FROM tab_anuncio_imagen WHERE id_anuncio = ? ", id );
     
@@ -31,7 +31,10 @@ const get_imagenes = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.menssage);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }   
 };
 
 // Petición asincrona de la imagen principal relacionada a un anuncio.
@@ -48,7 +51,7 @@ const get_imagen_principal = async(request, response) =>
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_imagen, id_anuncio, direccion_imagen  FROM tab_anuncio_imagen WHERE num_imagen = 1 " );
     
@@ -59,7 +62,10 @@ const get_imagen_principal = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.message);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }   
 };
 
 
@@ -83,7 +89,7 @@ const put_imagen = async(request, response) =>
         const imagen = {id_anuncio, num_imagen, direccion_imagen};
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         //Actualización SQl a la tabla. 
         const resultado = await conexion.query("UPDATE tab_anuncio_imagen SET ? WHERE direccion_imagen = ?", [imagen, direccion]);
         console.log(resultado);
@@ -93,7 +99,10 @@ const put_imagen = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.message);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }   
 };
 
 // Petición asincrona para eliminar un solo anuncio.
@@ -114,7 +123,7 @@ const delete_imagen = async(request, response) =>
             console.warn("No se pudo borrar el archivo (puede que no exista):", err.message);
         }
 
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         const resultado = await conexion.query("DELETE FROM tab_anuncio_imagen WHERE direccion_imagen = ?", [url]);
 
         if (resultado.affectedRows === 0) {
@@ -126,6 +135,9 @@ const delete_imagen = async(request, response) =>
         console.error("error en delete_imagen: ", error);
         return response.status(500).json({ error: "Error al eliminar la imagen.", detalle: error.message });
     }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    } 
 };
 
 //Procedimiento que realiza la petición para guardar en base de datos información de una imagen.
@@ -141,7 +153,7 @@ const post_imagen_bd = async (request, response,nombreImagen, id_anuncio, num_im
         const direccion_imagen = `/uploads/${nombreImagen}`;
         const imagen = { id_anuncio, num_imagen, direccion_imagen };
         
-        const conexion = await get_conexion();
+        const conexion = await inicio_conexion();
         const resultado = await conexion.query("INSERT INTO tab_anuncio_imagen SET ?", imagen);
 
         // Confirmar éxito en la inserción
@@ -154,6 +166,9 @@ const post_imagen_bd = async (request, response,nombreImagen, id_anuncio, num_im
         console.error("Error al guardar la imagen en BD:", error);
         return response.status(500).json({ success: false, message: "Error en la carga de la imagen", error: error.message });
     }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    } 
 };
 
 //Funcion
@@ -177,7 +192,7 @@ const post_imagen_serv = async (request, response,) => {
             return response.status(400).json({ success: false, message: "Faltan parámetros en la solicitud." });
         }
 
-        //Llamada al procedimiento que realiza la incercion de datos en la BD.
+        //Llamada al procedimiento que realiza la incerción de datos en la BD.
         await post_imagen_bd(request, response, nombreImagen, id_anuncio, num_imagen);
 
     } catch (error) {

@@ -43,13 +43,16 @@ export const mensaje_GET = (response, resultado) => {
 export const mensaje_PUT = (response, resultado) => {
     const Consulta_SinExito= " No se pudo actualizar el anuncio (valide que el indicador exista).";
     
-    if (resultado.affectedRows > 0) { // Condicional en caso de no encontrar resultados.
+    if (resultado.affectedRows === 0) { // Condicional en caso de no encontrar resultados.
         console.warn(`⚠️ ${Consulta_SinExito}`);
         return response.status(404).json({ message: Consulta_SinExito});
     }
     else{
         console.log("✅ Anuncio actualizado correctamente:", resultado); // Se muestra el resultado en consola
-        return response.status(200).json(resultado); // Devuelve el resultado completo.
+        return response.status(200).json({
+        status: "success",
+        data: resultado
+        }); // Devuelve el resultado completo con estado de completado.
     }
     
 };

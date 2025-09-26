@@ -24,7 +24,10 @@ const get_anuncio = async(request, response) =>
     }catch(error){
         //Llamado a función que muestra y envía los posibles errores.
         mensaje_error(response, "❌ Error al obtener el anuncio:", error);
-    }  
+    }
+     finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }   
 };
 
 export const metodos = {
