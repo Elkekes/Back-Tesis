@@ -3,6 +3,7 @@ import {get_conexion} from "./../bd/bd_conexion.js";
 // Petición asincrona para agregar un usuario.
 const add_registrar = async(request, response) =>
 {
+    let conexion;
     try{
         // Creamos las variables que se registraran en la base de datos.
         const {id_usuario} = request.body;
@@ -17,7 +18,7 @@ const add_registrar = async(request, response) =>
         const perfil = {id_usuario};
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await get_conexion();
+        conexion = await inicio_conexion();
         // Inserción SQl a la tabla. 
         const resultado = await conexion.query("INSERT INTO tab_perfil_usuario SET ?", perfil );
         console.log(resultado);
@@ -27,7 +28,10 @@ const add_registrar = async(request, response) =>
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
-    }  
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    }   
 };
 
 export const metodos = {
