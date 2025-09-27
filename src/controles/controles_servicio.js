@@ -3,9 +3,10 @@ import {inicio_conexion} from "../bd/bd_conexion.js";
 // Petición asincrona de todos los tipos de alojamiento.
 const get_tipos = async(request, response) =>
 {
+    let conexion;
     try{
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id, descripcion, categoria FROM tab_servicios");
         //response.json("Mensaje de prueba jsjsjsjsj");

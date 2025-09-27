@@ -3,9 +3,10 @@ import { mensaje_error, mensaje_POST, mensaje_GET, mensaje_PUT, mensaje_DELETE }
 
 // Petición asincrona de todos los anuncios.
 const get_anuncios = async (request, response) => {
+    let conexion;
     try {
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(`
             SELECT id_anuncio,titulo,descripcion, precio,fecha_inicio,fecha_fin,direccion,direccion_imagen,id_alojamiento  
@@ -27,13 +28,14 @@ const get_anuncios = async (request, response) => {
 // Petición asincrona de anuncios incompletos los anuncios.
 const get_anuncios_incompletos = async (request, response) => {
     const { id_usuario } = request.params;
+    let conexion;
     try {
         // Validación para comprobar la existencia de datos.
         if (id_usuario == undefined) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
         }
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_anuncio,titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,precio,fecha_inicio,fecha_fin,direccion,latitud,longitud FROM tab_anuncio WHERE id_usuario = ? AND " +
             "(titulo IS NULL OR descripcion IS NULL OR num_habitaciones IS NULL OR num_camas IS NULL OR num_banos IS NULL OR id_alojamiento IS NULL OR precio IS NULL OR fecha_inicio IS NULL OR fecha_fin IS NULL OR direccion IS NULL OR  latitud IS NULL OR " +
@@ -54,7 +56,7 @@ const get_anuncios_incompletos = async (request, response) => {
 // Petición asincrona para agregar un usuario.
 const post_anuncios = async (request, response) => {
     const { id_usuario, id_alojamiento } = request.body;
-
+    let conexion;
     try {
         // Validación para comprobar la existencia de datos.
         if (id_usuario == undefined || id_alojamiento == undefined) {
@@ -65,7 +67,7 @@ const post_anuncios = async (request, response) => {
         const datos = { id_usuario, id_alojamiento };
 
         // Conexión al servidor. "await" indica que debe esperar que se complete esta sección del código para continuar.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Inserción SQL en la tabla.
         const resultado = await conexion.query("INSERT INTO tab_anuncio SET ?", datos);
@@ -87,6 +89,7 @@ const post_anuncios = async (request, response) => {
 
 // Petición asincrona para actualizar un anuncio exeptuando la direccón.
 const put_anuncios = async (request, response) => {
+    let conexion;
     try {
         //Creamos  las variables que se actualizarán en la base de datos.
         const { titulo, descripcion, num_habitaciones, num_camas, num_banos, id_alojamiento, id_usuario, precio, fecha_inicio, fecha_fin } = request.body;
@@ -103,7 +106,7 @@ const put_anuncios = async (request, response) => {
         const anuncio = { titulo, descripcion, num_habitaciones, num_camas, num_banos, id_alojamiento, id_usuario, precio, fecha_inicio, fecha_fin };
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         //Actualización SQl a la tabla. 
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
 
@@ -121,6 +124,7 @@ const put_anuncios = async (request, response) => {
 
 // Petición asincrona para actualizar la dirección de un anuncio.
 const put_anuncios_direccion = async (request, response, id_anuncio, id_usuario, direccion, latitud, longitud) => {
+    let conexion;
     try {
         console.log(request.params);
 
@@ -133,7 +137,7 @@ const put_anuncios_direccion = async (request, response, id_anuncio, id_usuario,
         const anuncio = { id_usuario, direccion, latitud, longitud };
 
         // Conexión al servidor.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
@@ -153,6 +157,7 @@ const put_anuncios_direccion = async (request, response, id_anuncio, id_usuario,
 
 // Petición asincrona para actualizar el tipo de alojamiento de un anuncio.
 const put_tipoalojamiento = async (request, response) => {
+    let conexion;
     try {
         const { id_anuncio } = request.params;
         const { id_alojamiento } = request.body;
@@ -166,7 +171,7 @@ const put_tipoalojamiento = async (request, response) => {
         const anuncio = { id_alojamiento };
 
         // Conexión al servidor.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
@@ -185,6 +190,7 @@ const put_tipoalojamiento = async (request, response) => {
 
 // Petición asincrona para actualizar número de habitaciones, número de camas y número de baños de un anuncio.
 const put_cantidades = async (request, response) => {
+    let conexion;
     try {
         const { id_anuncio } = request.params;
         const { num_habitaciones, num_camas, num_banos } = request.body;
@@ -198,7 +204,7 @@ const put_cantidades = async (request, response) => {
         const anuncio = { num_habitaciones, num_camas, num_banos };
 
         // Conexión al servidor.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
@@ -217,6 +223,7 @@ const put_cantidades = async (request, response) => {
 
 // Petición asincrona para actualizar titulo, descripción y precios de un solo anuncio.
 const put_descripcion = async (request, response) => {
+    let conexion;
     try {
         const { id_anuncio } = request.params;
         const { titulo, descripcion, precio } = request.body;
@@ -230,7 +237,7 @@ const put_descripcion = async (request, response) => {
         const anuncio = { titulo, descripcion, precio };
 
         // Conexión al servidor.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
@@ -249,6 +256,7 @@ const put_descripcion = async (request, response) => {
 
 // Petición asincrona para actualizar la fecha de un solo anuncio.
 const put_fecha = async (request, response) => {
+    let conexion;
     try {
         const { id_anuncio } = request.params;
         const { fecha_inicio, fecha_fin } = request.body;
@@ -262,7 +270,7 @@ const put_fecha = async (request, response) => {
         const anuncio = { fecha_inicio, fecha_fin };
 
         // Conexión al servidor.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
@@ -281,6 +289,7 @@ const put_fecha = async (request, response) => {
 
 // Petición asincrona para eliminar un solo anuncio.
 const delete_anuncios = async (request, response) => {
+    let conexion;
     try {
         console.log(request.params)
         const { id } = request.params;
@@ -291,7 +300,7 @@ const delete_anuncios = async (request, response) => {
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("DELETE FROM tab_anuncio WHERE id_anuncio = ?", id); // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
 
@@ -310,13 +319,14 @@ const delete_anuncios = async (request, response) => {
 // Petición asincrona de anuncios incompletos de un usuraio determinado.
 const get_UltimoAnuncio = async (request, response) => {
     const { id_usuario } = request.params;
+    let conexion;
     try {
         // Validación para comprobar la existencia de datos.
         if (id_usuario == undefined) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
         }
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_anuncio FROM tab_anuncio WHERE id_usuario = ? ORDER BY id_anuncio DESC LIMIT 1", [id_usuario]);
 
@@ -335,14 +345,14 @@ const get_UltimoAnuncio = async (request, response) => {
 // Petición asincrona de la información un anuncio.
 const get_AnuncioInfo = async (request, response) => {
     const { id_anuncio } = request.params;
-
+    let conexion;
     try {
         // Validación para comprobar existencia de datos.
         if (id_anuncio == undefined) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
         }
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,id_usuario,precio,fecha_inicio,fecha_fin,direccion,latitud,longitud  FROM tab_anuncio WHERE id_anuncio = ?", [id_anuncio]);
 
@@ -361,14 +371,14 @@ const get_AnuncioInfo = async (request, response) => {
 // Petición asincrona de las imagenes de un anuncio.
 const get_AnuncioImg = async (request, response) => {
     const { id_anuncio } = request.params;
-
+    let conexion;
     try {
         // Validación para comprobar existencia de datos.
         if (id_anuncio == undefined) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
         }
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen FROM tab_anuncio_imagen WHERE id_anuncio = ?", [id_anuncio]);
         
@@ -388,14 +398,14 @@ const get_AnuncioImg = async (request, response) => {
 const get_publicaciones = async (request, response) => 
 {
     const { id_usuario } = request.params;
-
+    let conexion;
     try {
         // Validación para comprobar existencia de datos.
         if (id_usuario == undefined) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del usuario." });
         }
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(`
                 SELECT id_anuncio, titulo, num_habitaciones, precio, direccion 

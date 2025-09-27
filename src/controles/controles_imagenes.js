@@ -10,6 +10,7 @@ const { unlink } = require('fs').promises;
 // Petición asincrona de todas las imagenes relacionadas a un anuncio.
 const get_imagenes = async(request, response) =>
 {
+    let conexion;
     try{
         console.log(request.params)
         const {id} = request.params;
@@ -20,7 +21,7 @@ const get_imagenes = async(request, response) =>
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen  FROM tab_anuncio_imagen WHERE id_anuncio = ? ", id );
     
@@ -40,6 +41,7 @@ const get_imagenes = async(request, response) =>
 // Petición asincrona de la imagen principal relacionada a un anuncio.
 const get_imagen_principal = async(request, response) =>
 {
+    let conexion;
     try{
         console.log(request.params)
         const {id} = request.params;
@@ -51,7 +53,7 @@ const get_imagen_principal = async(request, response) =>
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_imagen, id_anuncio, direccion_imagen  FROM tab_anuncio_imagen WHERE num_imagen = 1 " );
     
@@ -73,6 +75,7 @@ const get_imagen_principal = async(request, response) =>
 // Petición asincrona para actualizar una imagen.
 const put_imagen = async(request, response) =>
 {
+    let conexion;
     try{
         //Creamos  las variables que se actualizarán en la base de datos.
         const {id_anuncio, num_imagen, direccion_imagen} = request.body;
@@ -89,7 +92,7 @@ const put_imagen = async(request, response) =>
         const imagen = {id_anuncio, num_imagen, direccion_imagen};
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         //Actualización SQl a la tabla. 
         const resultado = await conexion.query("UPDATE tab_anuncio_imagen SET ? WHERE direccion_imagen = ?", [imagen, direccion]);
         console.log(resultado);
@@ -108,6 +111,7 @@ const put_imagen = async(request, response) =>
 // Petición asincrona para eliminar un solo anuncio.
 const delete_imagen = async(request, response) =>
 {
+    let conexion;
     try {
         const url = request.query.url;
         if (!url){
@@ -123,7 +127,7 @@ const delete_imagen = async(request, response) =>
             console.warn("No se pudo borrar el archivo (puede que no exista):", err.message);
         }
 
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         const resultado = await conexion.query("DELETE FROM tab_anuncio_imagen WHERE direccion_imagen = ?", [url]);
 
         if (resultado.affectedRows === 0) {
@@ -142,6 +146,7 @@ const delete_imagen = async(request, response) =>
 
 //Procedimiento que realiza la petición para guardar en base de datos información de una imagen.
 const post_imagen_bd = async (request, response,nombreImagen, id_anuncio, num_imagen) => {
+    let conexion;
     try {
         if (!validarParametros(id_anuncio, num_imagen, nombreImagen)){
             return response.status(400).json({
@@ -153,7 +158,7 @@ const post_imagen_bd = async (request, response,nombreImagen, id_anuncio, num_im
         const direccion_imagen = `/uploads/${nombreImagen}`;
         const imagen = { id_anuncio, num_imagen, direccion_imagen };
         
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
         const resultado = await conexion.query("INSERT INTO tab_anuncio_imagen SET ?", imagen);
 
         // Confirmar éxito en la inserción

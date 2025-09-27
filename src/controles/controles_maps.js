@@ -103,6 +103,7 @@ const get_coordenadas = async (request, response) => {
 
 // Petición asincrona para la creacion de un anuncio mediante su dirección y coordenadas.
 const post_coodenadas_bd = async (request, response, id_usuario,direccion,latitud, longitud) => {
+    let conexion;
     try {
         // Validación para comprobar la existencia de datos.
         if ( id_usuario == undefined || direccion == undefined || latitud == undefined || longitud == undefined ) {
@@ -113,7 +114,7 @@ const post_coodenadas_bd = async (request, response, id_usuario,direccion,latitu
         const datos = { id_usuario, direccion, latitud, longitud};
 
         // Conexión al servidor. "await" indica que debe esperar que se complete esta sección del código para continuar.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Inserción SQL en la tabla.
         const resultado = await conexion.query("INSERT INTO tab_anuncio SET ?", datos);
@@ -131,6 +132,7 @@ const post_coodenadas_bd = async (request, response, id_usuario,direccion,latitu
 
 // Petición asincrona para la actualizacion de dirección y coordenadas en un anuncio.
 const put_coodenadas_bd = async (request, response, id_anuncio, direccion, coordenadas) => {
+    let conexion;
     try {
         // Validación para comprobar la existencia de datos.
         if (direccion == undefined || coordenadas == undefined || id_anuncio == undefined ) {
@@ -142,7 +144,7 @@ const put_coodenadas_bd = async (request, response, id_anuncio, direccion, coord
         const id  = { id_anuncio };
 
         // Conexión al servidor. "await" indica que debe esperar que se complete esta sección del código para continuar.
-        const conexion = await inicio_conexion();
+        conexion = await inicio_conexion();
 
         // Inserción SQL en la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [datos, id ]);
