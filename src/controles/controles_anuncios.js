@@ -1,5 +1,6 @@
 import { inicio_conexion } from "./../bd/bd_conexion.js";
 import { mensaje_error, mensaje_POST, mensaje_GET, mensaje_PUT, mensaje_DELETE } from "../mensajes/mensajes_consultas.js";
+import { request, response } from "express";
 
 // Petición asincrona de todos los anuncios.
 const get_anuncios = async (request, response) => {
@@ -372,6 +373,103 @@ const get_publicaciones = async (request, response) =>
         mensaje_error(response, "❌ Error al obtener los anuncios publicados", error);
     }
 };
+
+const buscar_anuncios = async (request, response) => {
+    const { termino } = request.params;
+    let conexion;
+
+    if (!termino || termino.trim() === '') {
+        return response.status(400).json({ 
+            success: false,
+            message: "El término de búsqueda no puede estar vacío." 
+        });
+    }
+
+    try {   
+        conexion = await inicio_conexion();
+        const terminoLimpio = termino.trim();
+        const terminoLike = `%${terminoLimpio}%`;
+        
+        // ✅ Para promise-mysql: resultado ES directamente los datos
+        const resultado = await conexion.query(`
+            SELECT *
+            FROM vista_card_anuncios
+            WHERE titulo LIKE ? OR descripcion LIKE ? OR direccion LIKE ?
+            LIMIT 100
+        `, [terminoLike, terminoLike, terminoLike]);
+
+        // ⚡ promise-mysql: resultado ya es el array de filas
+        if (!resultado || resultado.length === 0) {
+            return response.status(404).json({ 
+                success: false,
+                message: `No se encontraron anuncios para: "${terminoLimpio}"`
+            });
+        }
+
+        return response.status(200).json({
+            success: true,
+            data: resultado,  // ✅ resultado directo
+            count: resultado.length,
+            searchTerm: terminoLimpio
+        });
+
+    } catch(error) {
+        console.error("Error en buscar_anuncios:", error);
+        return response.status(500).json({
+            success: false,
+            message: "Error interno del servidor al realizar la búsqueda."
+        });
+    } finally {
+        if (conexion) {
+            try {
+                await conexion.end();
+            } catch (error) {
+                console.error("Error cerrando conexión:", error);
+            }
+        }
+    }
+};
+
+const buscar_sin_termino = async (request, response) => {
+    let conexion;
+    
+    try {
+        conexion = await inicio_conexion();
+        const resultado = await conexion.query(`
+            SELECT * FROM vista_card_anuncios
+        `);
+        
+        if (resultado.length === 0) {
+            return response.status(404).json({ 
+                success: false, 
+                message: "No se encontraron anuncios." 
+            });
+        }
+        
+        return response.status(200).json({
+            success: true,
+            data: resultado,
+            count: resultado.length
+        });
+        
+    } catch(error) {
+        console.error("❌ Error al buscar anuncios:", error);
+        return response.status(500).json({
+            success: false,
+            message: "Error interno del servidor"
+        });
+    } finally {
+        if (conexion) {
+            try {
+                await conexion.end();
+            } catch (err) {
+                console.error("Error cerrando conexión:", err);
+            }
+        }
+    }
+};
+
+
 export const metodos = {
     get_anuncios,
     get_anuncios_incompletos,
@@ -386,5 +484,8 @@ export const metodos = {
     get_UltimoAnuncio,
     get_AnuncioInfo,
     get_AnuncioImg,
-    get_publicaciones
+    get_publicaciones,
+
+    buscar_anuncios,
+    buscar_sin_termino
 };

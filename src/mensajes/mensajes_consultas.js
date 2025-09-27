@@ -29,14 +29,15 @@ export const mensaje_GET = (response, resultado) => {
     const Consulta_SinExito= "No se encontró información o indicador no encontrado.";
     
     if (resultado.length === 0) { // Condicional en caso de no encontrar resultados.
+        console.log("Resultado query:", resultado);
         console.warn(`⚠️ ${Consulta_SinExito}`);
         return response.status(404).json({ message: Consulta_SinExito});
     }
     else{
+        console.log("Resultado query:", resultado);
         console.log("✅ Resultado consulta:", resultado); // Se muestra el resultado en consola
         return response.json(resultado); // Devuelve el resultado completo.
     }
-    
 };
 
 //Funcion que devuelve un mensaje de error o exíto al realizar una actualización "PUT".

@@ -21,4 +21,12 @@ router.get("/last/post/:id_usuario", controles_anuncios.get_UltimoAnuncio);
 router.get("/anuncios/perfil/:id_anuncio", controles_anuncios.get_AnuncioInfo);
 router.get("/anuncios/imagenes/:id_anuncio", controles_anuncios.get_AnuncioImg);
 router.get("/anuncios/publicaciones/:id_usuario", controles_anuncios.get_publicaciones);
+
+
+// Buscar anuncios por título, descripción o ubicación
+router.get("/anuncios/buscar/:termino", controles_anuncios.buscar_anuncios);
+router.get("/home", controles_anuncios.buscar_sin_termino);
+
+
+
 export default router;
