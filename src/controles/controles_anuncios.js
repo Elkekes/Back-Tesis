@@ -428,41 +428,83 @@ const get_publicaciones = async (request, response) =>
 
 const buscar_anuncios = async (request, response) => {
     const { termino } = request.params;
+    const { tipos } = request.query;
     let conexion;
-
-    if (!termino || termino.trim() === '') {
-        return response.status(400).json({ 
-            success: false,
-            message: "El término de búsqueda no puede estar vacío." 
-        });
-    }
 
     try {   
         conexion = await inicio_conexion();
-        const terminoLimpio = termino.trim();
+        const terminoLimpio = termino ? termino.trim() : '';
         const terminoLike = `%${terminoLimpio}%`;
         
-        // ✅ Para promise-mysql: resultado ES directamente los datos
-        const resultado = await conexion.query(`
-            SELECT *
-            FROM vista_card_anuncios
-            WHERE titulo LIKE ? OR descripcion LIKE ? OR direccion LIKE ?
-            LIMIT 100
-        `, [terminoLike, terminoLike, terminoLike]);
+        // ✅ CONSTRUIR QUERY DINÁMICA CON FILTROS
+        let query = `SELECT * FROM vista_card_anuncios WHERE 1=1`;
+        let params = [];
+
+        // 🔍 Filtro por término de búsqueda (si existe)
+        if (terminoLimpio) {
+            query += ` AND (titulo LIKE ? OR descripcion LIKE ? OR direccion LIKE ?)`;
+            params.push(terminoLike, terminoLike, terminoLike);
+        }
+
+        // 🏠 Filtro por tipos de alojamiento (si existe Y NO está vacío)
+        if (tipos && tipos.trim() !== '') {
+            console.log('🔍 FILTRANDO POR TIPOS:', tipos);
+            
+            const tiposArray = tipos.split(',');
+            const tiposNumeros = tiposArray.filter(tipo => !isNaN(tipo) && tipo.trim() !== '');
+            
+            console.log('📋 TIPOS PROCESADOS:', tiposNumeros);
+            
+            if (tiposNumeros.length > 0) {
+                const placeholders = tiposNumeros.map(() => '?').join(',');
+                query += ` AND id_alojamiento IN (${placeholders})`;
+                params.push(...tiposNumeros);
+                
+                console.log('✅ FILTRO APLICADO - Query:', query);
+                console.log('✅ FILTRO APLICADO - Params:', params);
+            } else {
+                console.log('❌ NO HAY TIPOS VÁLIDOS PARA FILTRAR');
+            }
+        } else {
+            console.log('🔍 NO HAY FILTROS DE TIPOS');
+        }
+
+        query += ` LIMIT 100`;
+
+        console.log('🔍 Query ejecutada:', query);
+        console.log('📋 Parámetros:', params);
+
+        const resultado = await conexion.query(query, params);
+
+        // ✅ LOG PARA VERIFICAR FILTROS
+        console.log('🏠 RESULTADOS OBTENIDOS:', resultado.length);
+        if (resultado.length > 0) {
+            console.log('📊 ID_ALOJAMIENTO de resultados:', resultado.map(r => r.id_alojamiento));
+        }
 
         // ⚡ promise-mysql: resultado ya es el array de filas
         if (!resultado || resultado.length === 0) {
+            let mensaje = "No se encontraron anuncios";
+            if (terminoLimpio && tipos) {
+                mensaje = `No se encontraron anuncios para "${terminoLimpio}" con los filtros aplicados`;
+            } else if (terminoLimpio) {
+                mensaje = `No se encontraron anuncios para: "${terminoLimpio}"`;
+            } else if (tipos) {
+                mensaje = "No se encontraron anuncios con los filtros aplicados";
+            }
+
             return response.status(404).json({ 
                 success: false,
-                message: `No se encontraron anuncios para: "${terminoLimpio}"`
+                message: mensaje
             });
         }
 
         return response.status(200).json({
             success: true,
-            data: resultado,  // ✅ resultado directo
+            data: resultado,
             count: resultado.length,
-            searchTerm: terminoLimpio
+            searchTerm: terminoLimpio || '',
+            tiposFiltrados: tipos || ''
         });
 
     } catch(error) {

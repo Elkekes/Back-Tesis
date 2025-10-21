@@ -6,6 +6,10 @@ import {metodos as controles_detalle_anuncio} from "./../controles/controles_det
 // Creación de un enrutador (permitira manejar las rutas de nuestro crud).
 const  router = Router();
 
+
+router.get("/anuncios/buscar/:termino?", controles_anuncios.buscar_anuncios); //dejalo aquí como primera ruta declarada, porque si lo dejamos abajo, no jala
+
+
 // Asignacion de rutas al enrutador.
 router.get("/anuncios", controles_anuncios.get_anuncios);
 router.get("/anuncios/incompletos/:id_usuario", controles_anuncios.get_anuncios_incompletos);
@@ -24,9 +28,14 @@ router.get("/anuncios/publicaciones/:id_usuario", controles_anuncios.get_publica
 
 
 // Buscar anuncios por título, descripción o ubicación
-router.get("/anuncios/buscar/:termino", controles_anuncios.buscar_anuncios);
+
 router.get("/home", controles_anuncios.buscar_sin_termino);
 
-
+// router.get("/anuncios/buscar/:termino?", (req, res, next) => {
+//     console.log('🔍 RUTA /anuncios/buscar EJECUTADA');
+//     console.log('📝 Parámetros:', req.params);
+//     console.log('🔍 Query:', req.query);
+//     next();
+// }, controles_anuncios.buscar_anuncios);
 
 export default router;
