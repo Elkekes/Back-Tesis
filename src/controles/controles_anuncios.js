@@ -436,53 +436,36 @@ const buscar_anuncios = async (request, response) => {
         const terminoLimpio = termino ? termino.trim() : '';
         const terminoLike = `%${terminoLimpio}%`;
         
-        // ✅ CONSTRUIR QUERY DINÁMICA CON FILTROS
         let query = `SELECT * FROM vista_card_anuncios WHERE 1=1`;
         let params = [];
 
-        // 🔍 Filtro por término de búsqueda (si existe)
         if (terminoLimpio) {
             query += ` AND (titulo LIKE ? OR descripcion LIKE ? OR direccion LIKE ?)`;
             params.push(terminoLike, terminoLike, terminoLike);
         }
 
-        // 🏠 Filtro por tipos de alojamiento (si existe Y NO está vacío)
+        // ✅ SOLO LOGS ESENCIALES
         if (tipos && tipos.trim() !== '') {
-            console.log('🔍 FILTRANDO POR TIPOS:', tipos);
-            
             const tiposArray = tipos.split(',');
             const tiposNumeros = tiposArray.filter(tipo => !isNaN(tipo) && tipo.trim() !== '');
-            
-            console.log('📋 TIPOS PROCESADOS:', tiposNumeros);
             
             if (tiposNumeros.length > 0) {
                 const placeholders = tiposNumeros.map(() => '?').join(',');
                 query += ` AND id_alojamiento IN (${placeholders})`;
                 params.push(...tiposNumeros);
-                
-                console.log('✅ FILTRO APLICADO - Query:', query);
-                console.log('✅ FILTRO APLICADO - Params:', params);
-            } else {
-                console.log('❌ NO HAY TIPOS VÁLIDOS PARA FILTRAR');
             }
-        } else {
-            console.log('🔍 NO HAY FILTROS DE TIPOS');
         }
 
         query += ` LIMIT 100`;
 
-        console.log('🔍 Query ejecutada:', query);
-        console.log('📋 Parámetros:', params);
+        // ✅ UN SOLO LOG PARA DEBUG
+        console.log('🔍 Búsqueda - Query:', query);
+        console.log('📋 Búsqueda - Params:', params);
 
         const resultado = await conexion.query(query, params);
 
-        // ✅ LOG PARA VERIFICAR FILTROS
-        console.log('🏠 RESULTADOS OBTENIDOS:', resultado.length);
-        if (resultado.length > 0) {
-            console.log('📊 ID_ALOJAMIENTO de resultados:', resultado.map(r => r.id_alojamiento));
-        }
+        console.log('🏠 Resultados encontrados:', resultado.length);
 
-        // ⚡ promise-mysql: resultado ya es el array de filas
         if (!resultado || resultado.length === 0) {
             let mensaje = "No se encontraron anuncios";
             if (terminoLimpio && tipos) {
@@ -493,9 +476,14 @@ const buscar_anuncios = async (request, response) => {
                 mensaje = "No se encontraron anuncios con los filtros aplicados";
             }
 
-            return response.status(404).json({ 
-                success: false,
-                message: mensaje
+            // ✅ DEVUELVE 200 CON DATOS VACÍOS
+            return response.status(200).json({
+                success: true,
+                data: [],
+                count: 0,
+                message: mensaje,
+                searchTerm: terminoLimpio || '',
+                tiposFiltrados: tipos || ''
             });
         }
 
