@@ -9,56 +9,56 @@ const sent_coordenadas = async(request, response) =>
 {
     // Variables para almacenar rl id_usuario y la direccion enviada.
     const {id_anuncio,id_usuario,direccion} = request.body;
-    // "Key" O "Clave" para acceder ala api de maps.
-    const googleMapsApiKey = 'AIzaSyAJKhEZG06SRCHgQQiuv1fncdI-FUsj_PE';
+    const googleMapsApiKey = config.googleMapsApiKey;
 
     try{
         console.log(request.params);
         
         // Validación para comprobar existencia de datos.
-        if (id_anuncio == undefined || id_usuario == undefined ||direccion== undefined)
+        if (id_anuncio == undefined || id_usuario == undefined || direccion == undefined)
         {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
+             // Añadimos 'return' para asegurar que la ejecución se detenga aquí.
+            return response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
         }
-        else
+        
+        // Realizacion de la consulta ala Api de Google Maps.
+        const axiosResponse = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+            params: {
+                address: direccion,
+                key: googleMapsApiKey,
+            },
+        });
+
+        const apiStatus = axiosResponse.data.status;
+
+        // Condición que muestrara los resultados de la consulta o si currio un fallo.
+        if (apiStatus === 'OK') 
         {
-            //Realizacion de la consulta ala Api, se le proporciona la credencial "La clave de acceso" y a dirección que buscara.
-            const axiosResponse = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
-                params: {
-                    address: direccion,
-                    key: googleMapsApiKey,
-                },
+            const location = axiosResponse.data.results[0].geometry.location;
+            const lat = location.lat;
+            const long = location.lng;
+
+            // Al finalizar la consulta, se LLAMA A LA FUNCIÓN DE BD.
+            // Es crucial NO ENVIAR respuesta HTTP aquí. La función de BD enviará la única respuesta.
+            // Usamos 'return await' para asegurar que esperamos la función y devolvemos su resultado.
+            return await controles_anuncios.put_anuncios_direccion(request, response, id_anuncio, id_usuario, direccion, lat, long);
+        } 
+        else 
+        {
+            // Manejo de errores de la API de Google (ZERO_RESULTS, REQUEST_DENIED, etc.).
+            // Devolvemos el estado 404/500 con un mensaje más claro.
+            console.error(`Error de geocodificación: ${apiStatus}`);
+            return response.status(apiStatus === 'ZERO_RESULTS' ? 404 : 503).json({ 
+                success: false, 
+                message: `Error de geocodificación: ${apiStatus}. La dirección no pudo ser encontrada o la clave falló.`
             });
-
-            // Condición que muestrara los resultados de la consulta o si currio un fallo.
-            if (axiosResponse.data.status === 'OK') 
-            {
-                const location = axiosResponse.data.results[0].geometry.location;
-
-               // Mostramos el resutlado exítoso en el navegador en formato Json. 
-                response.json({
-                    success: true,
-                    latitud: location.lat,
-                    longitud: location.lng,
-                });
-
-                const lat = location.lat;
-                const long = location.lng;
-
-                // Al finalizar la consulta, se registra un anuncio mediante los metodos de "controles_anuncios" (Con los parametros: direccion, latitud y longitud) en la base de datos.
-                await controles_anuncios.put_anuncios_direccion(request, response, id_anuncio,id_usuario, direccion, lat, long);
-            } 
-            else 
-            {
-                // Mostramos el resutlado negativo en el navegador en formato Json.
-                return response.json({ success: 'error' });
-            }
         }
+        
     }catch(error){
-        // Código de respuesta hhtp:  Errores de los servidores. 
-        console.error(error);
-        return response.status(500).json({ success: 'error' });
-    }  
+        // Maneja errores de red, AXIOS, o errores internos.
+        console.error("Error en sent_coordenadas:", error);
+        return response.status(500).json({ success: 'error', message: 'Error interno del servidor al procesar la geocodificación.' });
+    }
 };
 
 const get_coordenadas = async (request, response) => {
@@ -67,39 +67,54 @@ const get_coordenadas = async (request, response) => {
     try {
         const { direccion } = request.params;
 
-        // Validación para comprobar existencia de datos.
         if (!direccion) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese una dirección." });
         }
 
-        // Realización de la consulta a la API de Google Maps.
         const axiosResponse = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
-            params: {
-                address: direccion,
-                key: googleMapsApiKey,
-            },
+            params: { address: direccion, key: googleMapsApiKey },
         });
 
-        // Condición que mostrará los resultados de la consulta o si ocurrió un fallo.
-        if (axiosResponse.data.status === 'OK') {
-            const location = axiosResponse.data.results[0].geometry.location;
+        const apiData = axiosResponse.data;
+        const apiStatus = apiData.status;
 
-            // Enviamos una única respuesta con las coordenadas.
-            response.json({
+        if (apiStatus === 'OK') {
+            // Se asume que results[0] existe si el status es OK.
+            const location = apiData.results[0].geometry.location; 
+
+            return response.json({
                 success: true,
                 latitud: location.lat,
                 longitud: location.lng,
             });
+
+        } else if (apiStatus === 'ZERO_RESULTS') {
+            // 404 Not Found: La dirección no fue encontrada por la API
+            return response.status(404).json({ 
+                success: false, 
+                message: "Dirección no encontrada por el servicio de geocodificación." 
+            });
+
+        } else if (apiStatus === 'REQUEST_DENIED' || apiStatus === 'OVER_QUERY_LIMIT') {
+            // 503 Service Unavailable o 403 Forbidden: Problema con la clave o el límite de uso.
+            console.error(`Error de la API de Google Maps: ${apiStatus}`);
+            return response.status(503).json({ 
+                success: false, 
+                message: `Error interno de servicio: ${apiStatus}.` 
+            });
+
         } else {
-            // Mostramos el resultado negativo en el navegador en formato Json.
-            response.status(500).json({ success: 'error' });
+            // Para cualquier otro status no manejado explícitamente
+            console.error(`Status de la API desconocido: ${apiStatus}`);
+            return response.status(500).json({ success: false, message: 'Error desconocido en la API externa.' });
         }
+        
     } catch (error) {
-        // Código de respuesta HTTP: Errores del servidor.
-        console.error(error);
-        response.status(500).json({ success: 'error' });
+        // Maneja errores de red, DNS o internos del servidor (ej. variable config faltante)
+        console.error("Error en la función get_coordenadas:", error.message);
+        return response.status(500).json({ success: false, message: 'Error interno del servidor al procesar la solicitud.' });
     }
-};
+}
 
 // Petición asincrona para la creacion de un anuncio mediante su dirección y coordenadas.
 const post_coodenadas_bd = async (request, response, id_usuario,direccion,latitud, longitud) => {

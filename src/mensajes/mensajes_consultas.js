@@ -26,12 +26,11 @@ export const mensaje_POST = (response, resultado) => {
 
 //Funcion que devuelve un mensaje de error o exíto al realizar las consultas "GET".
 export const mensaje_GET = (response, resultado) => {
-    const Consulta_SinExito= "No se encontró información o indicador no encontrado.";
-    
-    if (resultado.length === 0) { // Condicional en caso de no encontrar resultados.
+    const Consulta_SinExito= "No se encontró información o Indicador no encontrado.";
+    if (resultado.length === 0 && response.status != 400) { // Condicional en caso de no encontrar resultados.
         console.log("Resultado query:", resultado);
         console.warn(`⚠️ ${Consulta_SinExito}`);
-        return response.status(404).json({ message: Consulta_SinExito});
+        return response.status(200).json([]); // Devuelve código 200 con un array vacío [] si no se encontraron resultados.
     }
     else{
         console.log("Resultado query:", resultado);
