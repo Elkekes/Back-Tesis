@@ -25,11 +25,9 @@ router.get("/last/post/:id_usuario", controles_anuncios.get_UltimoAnuncio);
 router.get("/anuncios/perfil/:id_anuncio", controles_anuncios.get_AnuncioInfo);
 router.get("/anuncios/imagenes/:id_anuncio", controles_anuncios.get_AnuncioImg);
 router.get("/anuncios/publicaciones/:id_usuario", controles_anuncios.get_publicaciones);
-
-
-// Buscar anuncios por título, descripción o ubicación
-
-router.get("/home", controles_anuncios.buscar_sin_termino);
+router.get("/anuncios/numero/activos", controles_anuncios.get_numero_activos); //Ruta para consultar los anuncios completos en existencia
+router.get("/anuncios/numero/:tipo_alojamiento", controles_anuncios.get_numero_tipo); // Ruta para consultar total de anuncios por filtro "Tipo_anuncio"
+router.get("/anuncios/publicados/filtrar/:tipo_anuncio", controles_anuncios.get_anuncios_filtro);
 
 // router.get("/anuncios/buscar/:termino?", (req, res, next) => {
 //     console.log('🔍 RUTA /anuncios/buscar EJECUTADA');

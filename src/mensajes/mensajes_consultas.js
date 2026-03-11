@@ -3,6 +3,7 @@
 export const mensaje_error = (response, mensajePersonalizado, error) => {
     console.error(`❌ ${mensajePersonalizado}:`, error.message);
     response.status(500).json({
+        success: false,
         error: mensajePersonalizado,
         detalle: error.message
     });
@@ -26,16 +27,23 @@ export const mensaje_POST = (response, resultado) => {
 
 //Funcion que devuelve un mensaje de error o exíto al realizar las consultas "GET".
 export const mensaje_GET = (response, resultado) => {
-    const Consulta_SinExito= "No se encontró información o Indicador no encontrado.";
+    const Consulta_SinExito= "Información o Indicador no encontrados.";
     if (resultado.length === 0 && response.status != 400) { // Condicional en caso de no encontrar resultados.
+        console.warn(`⚠️  ${Consulta_SinExito}`);
         console.log("Resultado query:", resultado);
-        console.warn(`⚠️ ${Consulta_SinExito}`);
-        return response.status(200).json([]); // Devuelve código 200 con un array vacío [] si no se encontraron resultados.
+        return response.status(200).json({
+            success: true,
+            data: resultado,
+            count: resultado.length
+        }); // Devuelve código 200 con un array vacío [] si no se encontraron resultados.
     }
     else{
-        console.log("Resultado query:", resultado);
         console.log("✅ Resultado consulta:", resultado); // Se muestra el resultado en consola
-        return response.json(resultado); // Devuelve el resultado completo.
+        return response.status(200).json({
+            success: true,
+            data: resultado,
+            count: resultado.length
+        }); // Devuelve el resultado completo.
     }
 };
 

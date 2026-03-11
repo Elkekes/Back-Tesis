@@ -10,8 +10,9 @@ const get_anuncios = async (request, response) => {
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(`
-            SELECT id_anuncio,titulo,descripcion, precio,fecha_inicio,fecha_fin,direccion,direccion_imagen,id_alojamiento  
-            FROM vista_card_anuncios`
+            SELECT id_anuncio,titulo,descripcion, precio,fecha_inicio,fecha_fin,direccion,direccion_imagen,tipo_alojamiento  
+            FROM vista_card_anuncios 
+            WHERE estado_anuncio = 'Activo' `
         );
 
         //Llamado a función que muestra y envía el resultado de las consultas.
@@ -53,6 +54,99 @@ const get_anuncios_incompletos = async (request, response) => {
     if (conexion) await conexion.end(); // Cierre de la conexión.
     } 
 };
+
+// Petición asincrona de anuncios activos registrados.
+const get_numero_activos = async (request, response) => {
+    let conexion; // Declararamos la variable de conección
+    try {
+        // Conexión al servidor 
+        conexion = await inicio_conexion();
+
+        // Consulta SQL a la Vista con el concentrado de anuncios
+        const [resultado] = await conexion.query(
+            "SELECT COUNT(*) AS total FROM vista_anuncios_activos WHERE estado_anuncio = 'Activo' ",
+        );
+
+        console.log("contenido del arreglo: ",{resultado});
+        // Extraemos el valor numérico en "resultad"o" contiene el objeto { total: X } al acceder con "resultado.total" optenemos solo el conteo.
+        const conteoFinal = resultado.total;
+        
+        return mensaje_GET(response, conteoFinal);
+            
+    } catch (error) {
+        // Manejo de errores detallado
+        mensaje_error(response, "❌ Error al obtener el conteo de anuncios activos:", error);
+    } finally {
+        // Cierre seguro de la conexión
+        if (conexion) await conexion.end(); 
+    } 
+};
+const get_numero_tipo = async (request, response) => {
+    let conexion; // Declararamos la variable de conección
+    const { tipo_alojamiento } = request.params;
+    try {
+       
+        // Validación para comprobar la existencia de datos.
+        if (tipo_alojamiento == undefined) {
+            return response.status(400).json({ 
+                message: "SOLICITUD NO VÁLIDA: Debe ingresar el tipo de alojamiento." 
+            });
+        }
+        // Conexión al servidor 
+        conexion = await inicio_conexion();
+
+        // Consulta SQL a la Vista con el concentrado de anuncios
+        const [resultado] = await conexion.query(
+            "SELECT COUNT(*) AS total FROM vista_card_anuncios WHERE estado_anuncio = 'Activo' AND tipo_alojamiento = ?",
+            [tipo_alojamiento]
+        );
+
+        // Extraemos el valor numérico en "resultad"o" contiene el objeto { total: X } al acceder con "resultado.total" optenemos solo el conteo.
+        const conteoFinal = resultado.total;
+        
+        return mensaje_GET(response, conteoFinal);
+            
+    } catch (error) {
+        // Manejo de errores detallado
+        mensaje_error(response, "❌ Error al obtener el conteo de anuncios activos:", error);
+    } finally {
+        // Cierre seguro de la conexión
+        if (conexion) await conexion.end(); 
+    } 
+};
+// Petición asincrona para obtener todos los anuncios de determinado tipo.
+const get_anuncios_filtro = async (request, response) => {
+    let conexion;
+    const { tipo_anuncio } = request.params;
+    try {
+        
+        // Validación para comprobar la existencia de datos.
+        if (tipo_anuncio == undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Ingresar el tipo de alojamiento." });
+        }
+
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query(`
+            SELECT id_anuncio,titulo,descripcion, precio,fecha_inicio,fecha_fin,direccion,direccion_imagen,tipo_alojamiento  
+            FROM vista_card_anuncios 
+            WHERE estado_anuncio = 'Activo' AND tipo_alojamiento = ?`,[tipo_anuncio]
+        );
+
+        //Llamado a función que muestra y envía el resultado de las consultas.
+        mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "❌ Error al obtener anuncios:", error);
+    }
+    finally {
+    if (conexion) await conexion.end(); // Cierre de la conexión.
+    } 
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 // Petición asincrona para agregar un usuario.
 const post_anuncios = async (request, response) => {
@@ -512,46 +606,6 @@ const buscar_anuncios = async (request, response) => {
     }
 };
 
-const buscar_sin_termino = async (request, response) => {
-    let conexion;
-    
-    try {
-        conexion = await inicio_conexion();
-        const resultado = await conexion.query(`
-            SELECT * FROM vista_card_anuncios
-        `);
-        
-        if (resultado.length === 0) {
-            return response.status(404).json({ 
-                success: false, 
-                message: "No se encontraron anuncios." 
-            });
-        }
-        
-        return response.status(200).json({
-            success: true,
-            data: resultado,
-            count: resultado.length
-        });
-        
-    } catch(error) {
-        console.error("❌ Error al buscar anuncios:", error);
-        return response.status(500).json({
-            success: false,
-            message: "Error interno del servidor"
-        });
-    } finally {
-        if (conexion) {
-            try {
-                await conexion.end();
-            } catch (err) {
-                console.error("Error cerrando conexión:", err);
-            }
-        }
-    }
-};
-
-
 export const metodos = {
     get_anuncios,
     get_anuncios_incompletos,
@@ -567,7 +621,8 @@ export const metodos = {
     get_AnuncioInfo,
     get_AnuncioImg,
     get_publicaciones,
-
-    buscar_anuncios,
-    buscar_sin_termino
+    get_numero_activos,
+    get_numero_tipo,
+    get_anuncios_filtro,
+    buscar_anuncios
 };
