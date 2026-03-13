@@ -1,6 +1,7 @@
 import { inicio_conexion } from "./../bd/bd_conexion.js";
 import { mensaje_error, mensaje_POST, mensaje_GET, mensaje_PUT, mensaje_DELETE } from "../mensajes/mensajes_consultas.js";
 import { request, response } from "express";
+//------------------------------------------------------------Peticiones GET (Obtener informacion de anuncios)--------------------------------------------------------------------------------
 
 // Petición asincrona de todos los anuncios.
 const get_anuncios = async (request, response) => {
@@ -10,7 +11,7 @@ const get_anuncios = async (request, response) => {
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(`
-            SELECT id_anuncio,titulo,descripcion, precio,fecha_inicio,fecha_fin,direccion,direccion_imagen,tipo_alojamiento  
+            SELECT id_anuncio,titulo,descripcion, precio, direccion, direccion_imagen, tipo_alojamiento  
             FROM vista_card_anuncios 
             WHERE estado_anuncio = 'Activo' `
         );
@@ -23,8 +24,8 @@ const get_anuncios = async (request, response) => {
         mensaje_error(response, "❌ Error al obtener anuncios:", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona de anuncios incompletos los anuncios.
@@ -45,14 +46,14 @@ const get_anuncios_incompletos = async (request, response) => {
 
         //Llamado a función que muestra y envía el resultado de las consultas.
         return mensaje_GET(response, resultado);
-            
+
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
         mensaje_error(response, "❌ Error al obtener los anuncios incompletos:", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona de anuncios activos registrados.
@@ -67,29 +68,29 @@ const get_numero_activos = async (request, response) => {
             "SELECT COUNT(*) AS total FROM vista_anuncios_activos WHERE estado_anuncio = 'Activo' ",
         );
 
-        console.log("contenido del arreglo: ",{resultado});
+        console.log("contenido del arreglo: ", { resultado });
         // Extraemos el valor numérico en "resultad"o" contiene el objeto { total: X } al acceder con "resultado.total" optenemos solo el conteo.
         const conteoFinal = resultado.total;
-        
+
         return mensaje_GET(response, conteoFinal);
-            
+
     } catch (error) {
         // Manejo de errores detallado
         mensaje_error(response, "❌ Error al obtener el conteo de anuncios activos:", error);
     } finally {
         // Cierre seguro de la conexión
-        if (conexion) await conexion.end(); 
-    } 
+        if (conexion) await conexion.end();
+    }
 };
 const get_numero_tipo = async (request, response) => {
     let conexion; // Declararamos la variable de conección
     const { tipo_alojamiento } = request.params;
     try {
-       
+
         // Validación para comprobar la existencia de datos.
         if (tipo_alojamiento == undefined) {
-            return response.status(400).json({ 
-                message: "SOLICITUD NO VÁLIDA: Debe ingresar el tipo de alojamiento." 
+            return response.status(400).json({
+                message: "SOLICITUD NO VÁLIDA: Debe ingresar el tipo de alojamiento."
             });
         }
         // Conexión al servidor 
@@ -103,23 +104,23 @@ const get_numero_tipo = async (request, response) => {
 
         // Extraemos el valor numérico en "resultad"o" contiene el objeto { total: X } al acceder con "resultado.total" optenemos solo el conteo.
         const conteoFinal = resultado.total;
-        
+
         return mensaje_GET(response, conteoFinal);
-            
+
     } catch (error) {
         // Manejo de errores detallado
         mensaje_error(response, "❌ Error al obtener el conteo de anuncios activos:", error);
     } finally {
         // Cierre seguro de la conexión
-        if (conexion) await conexion.end(); 
-    } 
+        if (conexion) await conexion.end();
+    }
 };
 // Petición asincrona para obtener todos los anuncios de determinado tipo.
 const get_anuncios_filtro = async (request, response) => {
     let conexion;
     const { tipo_anuncio } = request.params;
     try {
-        
+
         // Validación para comprobar la existencia de datos.
         if (tipo_anuncio == undefined) {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Ingresar el tipo de alojamiento." });
@@ -131,7 +132,7 @@ const get_anuncios_filtro = async (request, response) => {
         const resultado = await conexion.query(`
             SELECT id_anuncio,titulo,descripcion, precio,fecha_inicio,fecha_fin,direccion,direccion_imagen,tipo_alojamiento  
             FROM vista_card_anuncios 
-            WHERE estado_anuncio = 'Activo' AND tipo_alojamiento = ?`,[tipo_anuncio]
+            WHERE estado_anuncio = 'Activo' AND tipo_alojamiento = ?`, [tipo_anuncio]
         );
 
         //Llamado a función que muestra y envía el resultado de las consultas.
@@ -142,11 +143,120 @@ const get_anuncios_filtro = async (request, response) => {
         mensaje_error(response, "❌ Error al obtener anuncios:", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
-//-----------------------------------------------------------------------------------------------------------------------------------------
+
+// Petición asincrona de anuncios incompletos de un usuraio determinado.
+const get_UltimoAnuncio = async (request, response) => {
+    const { id_usuario } = request.params;
+    let conexion;
+    try {
+        // Validación para comprobar la existencia de datos.
+        if (id_usuario == undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
+        }
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query("SELECT id_anuncio FROM tab_anuncio WHERE id_usuario = ? ORDER BY id_anuncio DESC LIMIT 1", [id_usuario]);
+
+        // Verificamos si se obtenieron los registro.
+        return mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "❌ Error en la optención del último anuncio", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+// Petición asincrona de la información un anuncio.
+const get_AnuncioInfo = async (request, response) => {
+    const { id_anuncio } = request.params;
+    let conexion;
+    try {
+        // Validación para comprobar existencia de datos.
+        if (id_anuncio == undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
+        }
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query("SELECT titulo,descripcion,habitaciones,camas,banos,tipo_alojamiento,usuario,precio,direccion,latitud,longitud  FROM vista_card_anuncios WHERE id_anuncio = ?", [id_anuncio]);
+
+        // Verificamos si se obtuvo algún registro.
+        return mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "❌ Error al obtener información del anuncio", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+// Petición asincrona de las imagenes de un anuncio.
+const get_AnuncioImg = async (request, response) => {
+    const { id_anuncio } = request.params;
+    let conexion;
+    try {
+        // Validación para comprobar existencia de datos.
+        if (id_anuncio == undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
+        }
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen FROM tab_anuncio_imagen WHERE id_anuncio = ?", [id_anuncio]);
+
+        // Verificamos si se obtuvieron los registros con las urls de la imagen.
+        return mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "❌ Error al obtener las URLs de las imagenes", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+// Petición asincrona de todos los anuncios publicados por un usuario.
+const get_publicaciones = async (request, response) => {
+    const { id_usuario } = request.params;
+    let conexion;
+    try {
+        // Validación para comprobar existencia de datos.
+        if (id_usuario == undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del usuario." });
+        }
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query(`
+                SELECT id_anuncio, titulo, descripcion, precio, habitaciones, camas, banos, direccion, tipo_alojamiento, estado_anuncio
+                FROM vista_card_anuncios 
+                WHERE usuario = ?`,
+            [id_usuario]);
+
+        // Verificamos si se obtuvieron los registros con los anuncios publicados.
+        return mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "❌ Error al obtener los anuncios publicados", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+//------------------------------------------------------------Peticiones POST (Inserción de un nuevo Anuncio)---------------------------------------------------------------------
 
 // Petición asincrona para agregar un usuario.
 const post_anuncios = async (request, response) => {
@@ -177,28 +287,35 @@ const post_anuncios = async (request, response) => {
         mensaje_error(response, "❌ Error en el registro del anuncio:", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
+//----------------------------------------------------------------- Peticiones PUT (Actualización de Anuncios) -------------------------------------------------------------------
 
 // Petición asincrona para actualizar un anuncio exeptuando la direccón.
 const put_anuncios = async (request, response) => {
     let conexion;
-    try {
-        //Creamos  las variables que se actualizarán en la base de datos.
-        const { titulo, descripcion, num_habitaciones, num_camas, num_banos, id_alojamiento, id_usuario, precio, fecha_inicio, fecha_fin } = request.body;
-        console.log(request.params)
-        //Asignamos el id del anuncio proporcionado en la URl.
-        const { id_anuncio } = request.params;
+    // Asignamos el id del anuncio proporcionado en la URl.
+    const { id_anuncio } = request.params;
 
+    const body = request.body;
+    const anuncio = {};
+
+    try {
+        const camposPermitidos = ['titulo', 'descripcion', 'num_habitaciones', 'num_camas', 'num_banos', 'id_alojamiento', 'precio', 'status'];
+        
         // Validación para comprobar existencia de datos.
         if (id_anuncio == undefined) {
             response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
         }
-
-        // Almacenamos las variables que se actualizarán en la base de datos.
-        const anuncio = { titulo, descripcion, num_habitaciones, num_camas, num_banos, id_alojamiento, id_usuario, precio, fecha_inicio, fecha_fin };
+        
+        // Creamos  las variables que se actualizarán en la base de datos. Solo agregamos al objeto lo que realmente viene en el request.
+        for (const key in body) {
+            if (camposPermitidos.includes(key) && body[key] !== undefined && body[key] !== null) {
+                anuncio[key] = body[key];
+            }
+        }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
@@ -213,8 +330,8 @@ const put_anuncios = async (request, response) => {
         mensaje_error(response, "❌ Error en la actualización del anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona para actualizar la dirección de un anuncio.
@@ -236,7 +353,7 @@ const put_anuncios_direccion = async (request, response, id_anuncio, id_usuario,
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
-        
+
         // Verificamos si se actualizó algún registro.
         return mensaje_PUT(response, resultado);
 
@@ -245,8 +362,8 @@ const put_anuncios_direccion = async (request, response, id_anuncio, id_usuario,
         mensaje_error(response, "❌ Error en la actualización de dirección en el anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 
@@ -270,7 +387,7 @@ const put_tipoalojamiento = async (request, response) => {
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
-        
+
         // Verificamos si se actualizó algún registro.
         return mensaje_PUT(response, resultado);
 
@@ -279,8 +396,8 @@ const put_tipoalojamiento = async (request, response) => {
         mensaje_error(response, "❌ Error en la actualización de tipo de alojamiento en el anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona para actualizar número de habitaciones, número de camas y número de baños de un anuncio.
@@ -303,17 +420,17 @@ const put_cantidades = async (request, response) => {
 
         // Actualización SQL a la tabla.
         const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
-        
+
         // Verificamos si se actualizó algún registro.
         return mensaje_PUT(response, resultado);
-        
+
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
         mensaje_error(response, "❌ Error en la actualización de cantidades en el anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona para actualizar titulo, descripción y precios de un solo anuncio.
@@ -345,8 +462,8 @@ const put_descripcion = async (request, response) => {
         mensaje_error(response, "❌ Error en la actualización de descripciones en el anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona para actualizar la fecha de un solo anuncio.
@@ -378,10 +495,43 @@ const put_fecha = async (request, response) => {
         mensaje_error(response, "❌ Error en la actualización de fechas en el anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
+// Petición asincrona para actualizar titulo, descripción y precios de un solo anuncio.
+const put_status = async (request, response) => {
+    let conexion;
+    try {
+        const { id_anuncio } = request.params;
+        const { status } = request.body;
+
+        // Validación para comprobar existencia de datos.
+        if (id_anuncio === undefined || status === undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el los datos del anuncio pendiente de actualización." });
+        }
+
+        // Almacenamos las variables que se actualizarán en la base de datos.
+        const anuncio = { status };
+
+        // Conexión al servidor.
+        conexion = await inicio_conexion();
+
+        // Actualización SQL a la tabla.
+        const resultado = await conexion.query("UPDATE tab_anuncio SET ? WHERE id_anuncio = ?", [anuncio, id_anuncio]);
+
+        // Verificamos si se actualizó algún registro.
+        return mensaje_PUT(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "❌ Error en la actualización de descripciones en el anuncio.", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+//----------------------------------------------------------------- Peticiones DELETE-------------------------------------------------------------------------
 // Petición asincrona para eliminar un solo anuncio.
 const delete_anuncios = async (request, response) => {
     let conexion;
@@ -407,117 +557,8 @@ const delete_anuncios = async (request, response) => {
         mensaje_error(response, "❌ Error en la eliminación del anuncio.", error);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
-};
-
-// Petición asincrona de anuncios incompletos de un usuraio determinado.
-const get_UltimoAnuncio = async (request, response) => {
-    const { id_usuario } = request.params;
-    let conexion;
-    try {
-        // Validación para comprobar la existencia de datos.
-        if (id_usuario == undefined) {
-            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
-        }
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_anuncio FROM tab_anuncio WHERE id_usuario = ? ORDER BY id_anuncio DESC LIMIT 1", [id_usuario]);
-
-        // Verificamos si se obtenieron los registro.
-        return mensaje_GET(response, resultado);
-
-    } catch (error) {
-        //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la optención del último anuncio", error);
+        if (conexion) await conexion.end(); // Cierre de la conexión.
     }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
-};
-
-// Petición asincrona de la información un anuncio.
-const get_AnuncioInfo = async (request, response) => {
-    const { id_anuncio } = request.params;
-    let conexion;
-    try {
-        // Validación para comprobar existencia de datos.
-        if (id_anuncio == undefined) {
-            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
-        }
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,id_usuario,precio,fecha_inicio,fecha_fin,direccion,latitud,longitud  FROM tab_anuncio WHERE id_anuncio = ?", [id_anuncio]);
-
-        // Verificamos si se obtuvo algún registro.
-        return mensaje_GET(response, resultado);
-
-    } catch (error) {
-        //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener información del anuncio", error);
-    }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
-};
-
-// Petición asincrona de las imagenes de un anuncio.
-const get_AnuncioImg = async (request, response) => {
-    const { id_anuncio } = request.params;
-    let conexion;
-    try {
-        // Validación para comprobar existencia de datos.
-        if (id_anuncio == undefined) {
-            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
-        }
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen FROM tab_anuncio_imagen WHERE id_anuncio = ?", [id_anuncio]);
-        
-        // Verificamos si se obtuvieron los registros con las urls de la imagen.
-        return mensaje_GET(response, resultado);
-
-    } catch (error) {
-        //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener las URLs de las imagenes", error);
-    }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
-};
-
-// Petición asincrona de todos los anuncios publicados por un usuario.
-const get_publicaciones = async (request, response) => 
-{
-    const { id_usuario } = request.params;
-    let conexion;
-    try {
-        // Validación para comprobar existencia de datos.
-        if (id_usuario == undefined) {
-            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del usuario." });
-        }
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        // Consulta SQl a la tabla. 
-        const resultado = await conexion.query(`
-                SELECT id_anuncio, titulo, num_habitaciones, precio, direccion 
-                FROM tab_anuncio 
-                WHERE id_usuario = ?`,
-            [id_usuario]);
-
-        // Verificamos si se obtuvieron los registros con los anuncios publicados.
-        return mensaje_GET(response, resultado);
-
-    } catch (error) {
-        //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener los anuncios publicados", error);
-    }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
 };
 
 const buscar_anuncios = async (request, response) => {
@@ -525,11 +566,11 @@ const buscar_anuncios = async (request, response) => {
     const { tipos } = request.query;
     let conexion;
 
-    try {   
+    try {
         conexion = await inicio_conexion();
         const terminoLimpio = termino ? termino.trim() : '';
         const terminoLike = `%${terminoLimpio}%`;
-        
+
         let query = `SELECT * FROM vista_card_anuncios WHERE 1=1`;
         let params = [];
 
@@ -542,7 +583,7 @@ const buscar_anuncios = async (request, response) => {
         if (tipos && tipos.trim() !== '') {
             const tiposArray = tipos.split(',');
             const tiposNumeros = tiposArray.filter(tipo => !isNaN(tipo) && tipo.trim() !== '');
-            
+
             if (tiposNumeros.length > 0) {
                 const placeholders = tiposNumeros.map(() => '?').join(',');
                 query += ` AND id_alojamiento IN (${placeholders})`;
@@ -589,7 +630,7 @@ const buscar_anuncios = async (request, response) => {
             tiposFiltrados: tipos || ''
         });
 
-    } catch(error) {
+    } catch (error) {
         console.error("Error en buscar_anuncios:", error);
         return response.status(500).json({
             success: false,
@@ -610,13 +651,6 @@ export const metodos = {
     get_anuncios,
     get_anuncios_incompletos,
     put_anuncios,
-    put_anuncios_direccion,
-    put_tipoalojamiento,
-    put_cantidades,
-    put_descripcion,
-    put_fecha,
-    post_anuncios,
-    delete_anuncios,
     get_UltimoAnuncio,
     get_AnuncioInfo,
     get_AnuncioImg,
@@ -624,5 +658,13 @@ export const metodos = {
     get_numero_activos,
     get_numero_tipo,
     get_anuncios_filtro,
+    post_anuncios,
+    put_anuncios_direccion,
+    put_tipoalojamiento,
+    put_cantidades,
+    put_descripcion,
+    put_fecha,
+    put_status,
+    delete_anuncios,
     buscar_anuncios
 };
