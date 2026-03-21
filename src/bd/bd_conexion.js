@@ -15,11 +15,11 @@ const inicio_conexion = async () => {
             user: config.user,
             password: config.password
         });
-        console.log("✅ Conexión establecida con RDS.");
+        console.log("Conexión establecida con RDS.");
         return conexion; // Retorno la conexión para las consultas.
     
     } catch (error) {   
-        console.error("❌ Error al conectar con la base de datos:", error.message), ".";
+        console.error("Error al conectar con la base de datos:", error.message), ".";
         throw error; // Manda el error para que manejo en main.js
     }   
     
