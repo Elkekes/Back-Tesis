@@ -15,7 +15,8 @@ router.get("/anuncios", controles_anuncios.get_anuncios);
 router.get("/anuncios/incompletos/:id_usuario", controles_anuncios.get_anuncios_incompletos);
 router.get("/anuncios/:id_anuncio", controles_detalle_anuncio.get_anuncio);
 router.get("/last/post/:id_usuario", controles_anuncios.get_UltimoAnuncio);
-router.get("/anuncios/perfil/:id_anuncio", controles_anuncios.get_AnuncioInfo);
+router.get("/anuncios/actualizar/:id_anuncio/:id_usuario", controles_anuncios.get_AnuncioInfo);
+router.get("/anuncios/perfil/:id_anuncio", controles_anuncios.get_AnunciosInfo);
 router.get("/anuncios/imagenes/:id_anuncio", controles_anuncios.get_AnuncioImg);
 router.get("/anuncios/publicaciones/:id_usuario", controles_anuncios.get_publicaciones);
 router.get("/anuncios/numero/activos", controles_anuncios.get_numero_activos); //Ruta para consultar los anuncios completos en existencia

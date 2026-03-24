@@ -12,7 +12,7 @@ const get_anuncio = async(request, response) =>
         
         //Consulta SQl a la tabla. Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
         const resultado = await conexion.query(`
-            SELECT id_anuncio, id_usuario, id_alojamiento, titulo, descripcion, precio, num_habitaciones, num_camas, num_banos, fecha_inicio, fecha_fin 
+            SELECT id_anuncio, id_usuario, id_alojamiento, titulo, descripcion, precio, num_habitaciones, num_camas, num_banos,
             FROM tab_anuncio 
             WHERE id_anuncio = ?`, 
             [id_anuncio]

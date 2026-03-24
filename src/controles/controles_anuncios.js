@@ -21,7 +21,7 @@ const get_anuncios = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener anuncios:", error);
+        mensaje_error(response, "Error al obtener anuncios:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -40,8 +40,8 @@ const get_anuncios_incompletos = async (request, response) => {
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_anuncio,titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,precio,fecha_inicio,fecha_fin,direccion,latitud,longitud FROM tab_anuncio WHERE id_usuario = ? AND " +
-            "(titulo IS NULL OR descripcion IS NULL OR num_habitaciones IS NULL OR num_camas IS NULL OR num_banos IS NULL OR id_alojamiento IS NULL OR precio IS NULL OR fecha_inicio IS NULL OR fecha_fin IS NULL OR direccion IS NULL OR  latitud IS NULL OR " +
+        const resultado = await conexion.query("SELECT id_anuncio,titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,precio,direccion,latitud,longitud FROM tab_anuncio WHERE id_usuario = ? AND " +
+            "(titulo IS NULL OR descripcion IS NULL OR num_habitaciones IS NULL OR num_camas IS NULL OR num_banos IS NULL OR id_alojamiento IS NULL OR precio IS NULL OR direccion IS NULL OR  latitud IS NULL OR " +
             "longitud IS NULL);", [id_usuario]);
 
         //Llamado a función que muestra y envía el resultado de las consultas.
@@ -49,7 +49,7 @@ const get_anuncios_incompletos = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener los anuncios incompletos:", error);
+        mensaje_error(response, "Error al obtener los anuncios incompletos:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -76,7 +76,7 @@ const get_numero_activos = async (request, response) => {
 
     } catch (error) {
         // Manejo de errores detallado
-        mensaje_error(response, "❌ Error al obtener el conteo de anuncios activos:", error);
+        mensaje_error(response, "Error al obtener el conteo de anuncios activos:", error);
     } finally {
         // Cierre seguro de la conexión
         if (conexion) await conexion.end();
@@ -109,7 +109,7 @@ const get_numero_tipo = async (request, response) => {
 
     } catch (error) {
         // Manejo de errores detallado
-        mensaje_error(response, "❌ Error al obtener el conteo de anuncios activos:", error);
+        mensaje_error(response, "Error al obtener el conteo de anuncios activos:", error);
     } finally {
         // Cierre seguro de la conexión
         if (conexion) await conexion.end();
@@ -140,7 +140,7 @@ const get_anuncios_filtro = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener anuncios:", error);
+        mensaje_error(response, "Error al obtener anuncios:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -167,7 +167,7 @@ const get_UltimoAnuncio = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la optención del último anuncio", error);
+        mensaje_error(response, "Error en la optención del último anuncio", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -177,23 +177,63 @@ const get_UltimoAnuncio = async (request, response) => {
 // Petición asincrona de la información un anuncio.
 const get_AnuncioInfo = async (request, response) => {
     const { id_anuncio } = request.params;
+    const { id_usuario } = request.params;
     let conexion;
     try {
         // Validación para comprobar existencia de datos.
         if (id_anuncio == undefined) {
-            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
+            return response.status(400).json({ message: "Solicitud no valida: Por favor ingrese el 'id' del anuncio." });
         }
+        else if (id_usuario == undefined){
+            return response.status(400).json({ message: "Solicitud no valida: usuario no encontrado." });
+        }
+
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT titulo,descripcion,habitaciones,camas,banos,tipo_alojamiento,usuario,precio,direccion,latitud,longitud  FROM vista_card_anuncios WHERE id_anuncio = ?", [id_anuncio]);
+        const resultado = await conexion.query(`
+                    SELECT id_anuncio,titulo,descripcion, num_habitaciones AS habitaciones, num_camas AS camas, num_banos AS banos
+                    ,id_alojamiento AS tipo_alojamiento, id_usuario AS usuario, precio, direccion, latitud, longitud, status AS estado_anuncio
+                    FROM tab_anuncio 
+                    WHERE id_anuncio = ? 
+                    AND id_usuario = ?`, [id_anuncio,id_usuario]);
 
         // Verificamos si se obtuvo algún registro.
         return mensaje_GET(response, resultado);
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener información del anuncio", error);
+        mensaje_error(response, "Error al obtener información del anuncio Aquiii Aquiiii", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+// Petición asincrona de la información un anuncio.
+const get_AnunciosInfo = async (request, response) => {
+    const { id_anuncio } = request.params;
+    let conexion;
+    try {
+        // Validación para comprobar existencia de datos.
+        if (id_anuncio == undefined) {
+            return response.status(400).json({ message: "Solicitud no valida: Por favor ingrese el 'id' del anuncio." });
+        }
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query(`
+                    SELECT titulo,descripcion,habitaciones,camas,banos,tipo_alojamiento,usuario,precio,direccion,latitud,longitud  
+                    FROM vista_card_anuncios 
+                    WHERE id_anuncio = ? 
+                    `, [id_anuncio]);
+
+        // Verificamos si se obtuvo algún registro.
+        return mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "Error al obtener información del anuncio", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -219,7 +259,7 @@ const get_AnuncioImg = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener las URLs de las imagenes", error);
+        mensaje_error(response, "Error al obtener las URLs de las imagenes", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -241,15 +281,14 @@ const get_publicaciones = async (request, response) => {
         const resultado = await conexion.query(`
                 SELECT id_anuncio, titulo, descripcion, precio, habitaciones, camas, banos, direccion, tipo_alojamiento, estado_anuncio
                 FROM vista_card_anuncios 
-                WHERE usuario = ?`,
-            [id_usuario]);
+                WHERE usuario = ?`,[id_usuario]);
 
         // Verificamos si se obtuvieron los registros con los anuncios publicados.
         return mensaje_GET(response, resultado);
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error al obtener los anuncios publicados", error);
+        mensaje_error(response, "Error al obtener los anuncios publicados por el usuario", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -284,7 +323,7 @@ const post_anuncios = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en el registro del anuncio:", error);
+        mensaje_error(response, "Error en el registro del anuncio:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -327,7 +366,7 @@ const put_anuncios = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización del anuncio.", error);
+        mensaje_error(response, "Error en la actualización del anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -359,7 +398,7 @@ const put_anuncios_direccion = async (request, response, id_anuncio, id_usuario,
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización de dirección en el anuncio.", error);
+        mensaje_error(response, "Error en la actualización de dirección en el anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -393,7 +432,7 @@ const put_tipoalojamiento = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización de tipo de alojamiento en el anuncio.", error);
+        mensaje_error(response, "Error en la actualización de tipo de alojamiento en el anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -426,7 +465,7 @@ const put_cantidades = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización de cantidades en el anuncio.", error);
+        mensaje_error(response, "Error en la actualización de cantidades en el anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -459,7 +498,7 @@ const put_descripcion = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización de descripciones en el anuncio.", error);
+        mensaje_error(response, "Error en la actualización de descripciones en el anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -492,7 +531,7 @@ const put_fecha = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización de fechas en el anuncio.", error);
+        mensaje_error(response, "Error en la actualización de fechas en el anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -525,7 +564,7 @@ const put_status = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la actualización de descripciones en el anuncio.", error);
+        mensaje_error(response, "Error en la actualización de descripciones en el anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -554,7 +593,7 @@ const delete_anuncios = async (request, response) => {
 
     } catch (error) {
         // Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "❌ Error en la eliminación del anuncio.", error);
+        mensaje_error(response, "Error en la eliminación del anuncio.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -579,7 +618,7 @@ const buscar_anuncios = async (request, response) => {
             params.push(terminoLike, terminoLike, terminoLike);
         }
 
-        // ✅ SOLO LOGS ESENCIALES
+        // SOLO LOGS ESENCIALES
         if (tipos && tipos.trim() !== '') {
             const tiposArray = tipos.split(',');
             const tiposNumeros = tiposArray.filter(tipo => !isNaN(tipo) && tipo.trim() !== '');
@@ -593,7 +632,7 @@ const buscar_anuncios = async (request, response) => {
 
         query += ` LIMIT 100`;
 
-        // ✅ UN SOLO LOG PARA DEBUG
+        // UN SOLO LOG PARA DEBUG
         console.log('🔍 Búsqueda - Query:', query);
         console.log('📋 Búsqueda - Params:', params);
 
@@ -611,7 +650,7 @@ const buscar_anuncios = async (request, response) => {
                 mensaje = "No se encontraron anuncios con los filtros aplicados";
             }
 
-            // ✅ DEVUELVE 200 CON DATOS VACÍOS
+            // DEVUELVE 200 CON DATOS VACÍOS
             return response.status(200).json({
                 success: true,
                 data: [],
@@ -653,6 +692,7 @@ export const metodos = {
     put_anuncios,
     get_UltimoAnuncio,
     get_AnuncioInfo,
+    get_AnunciosInfo,
     get_AnuncioImg,
     get_publicaciones,
     get_numero_activos,
