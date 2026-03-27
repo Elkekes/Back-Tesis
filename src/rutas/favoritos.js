@@ -6,9 +6,8 @@ import {metodos as controles_favoritos} from "./../controles/controles_favoritos
 const  router = Router();
 
 // Asignacion de rutas al enrutador.
-//router.get("/favoritos", controles_favoritos.get_favoritos);
-router.get("/favoritos/:id_usuario", controles_favoritos.get_favoritos);
-router.post("/favoritos", controles_favoritos.post_favorito);
-router.delete("/favoritos/:id", controles_favoritos.delete_favorito);
+router.get("/favoritos/:id_usuario", controles_favoritos.get_favoritos); //Obtener todos los favoritos de un usuario
+router.post("/favoritos", controles_favoritos.post_favorito);// Agregar favorito a un usuario
+router.delete("/favoritos", controles_favoritos.delete_favorito);// Eliminar favorito a un usuario
 
 export default router;

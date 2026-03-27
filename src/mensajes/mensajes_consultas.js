@@ -19,7 +19,10 @@ export const mensaje_POST = (response, resultado) => {
     }
     else{
         console.log("Resultado consulta:", resultado); // Se muestra el resultado en consola
-        return response.json(resultado); // Devuelve el resultado completo.
+        return response.status(201).json({
+            success: true,
+            data: resultado,
+        }); // Devuelve el resultado completo.
     }
     
 };
