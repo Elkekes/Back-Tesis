@@ -9,7 +9,7 @@ const get_tipos = async(request, response) =>
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id, descripcion, categoria FROM tab_servicios");
+        const resultado = await conexion.query("SELECT id AS id_servicio, descripcion, categoria FROM tab_servicios");
         //response.json("Mensaje de prueba jsjsjsjsj");
         console.log(resultado);
         // Mostramos el resutlado en el navegador en formato Json.
