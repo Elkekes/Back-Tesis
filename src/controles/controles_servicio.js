@@ -51,46 +51,67 @@ const get_serviciosAnuncio = async (request, response) => {
 };
 
 // Petición asíncrona para guardar múltiples servicios de un anuncio.
-const post_serviciosAnuncios = async (request, response) => {
+const post_servicios_anuncio = async (request, response) => {
     let conexion;
-    // Extraemos el ID del anuncio y el array de servicios del cuerpo de la petición.
-    // Ejemplo esperado: { "id_anuncio": 5, "servicios": [1, 2, 8, 10] }
-    const { id_anuncio, servicios } = request.body;
-
     try {
-        // Validaciones iniciales
-        if (!id_anuncio || !Array.isArray(servicios) || servicios.length === 0) {
-            return response.status(400).json({ 
-                message: "SOLICITUD NO VÁLIDA: Se requiere 'id_anuncio' y un arreglo de 'servicios' no vacío." 
-            });
-        }
+        const { id_anuncio, servicios: serviciosNuevos } = request.body;
 
-        // Formatear los datos para MySQL
-        // MySQL espera un formato de "Array de Arrays": [[id_anuncio, id_serv1], [id_anuncio, id_serv2]]
-        const valoresParaInsertar = servicios.map(id_servicio => [id_anuncio, id_servicio]);
+        // Validación de datos
+        if (!id_anuncio || !Array.isArray(serviciosNuevos)) {
+            return response.status(400).json({ message: "Faltan datos en la petición." });
+        }
 
         conexion = await inicio_conexion();
 
-        // Ejecutar el Insert Múltiple
-        // Nota: En inserciones múltiples con mysql2 se usa [valoresParaInsertar] (doble corchete implícito)
-        const sql = "INSERT IGNORE INTO tab_anuncio_servicio (id_anuncio, id_servicio) VALUES ?";
-        const [resultado] = await conexion.query(sql, [valoresParaInsertar]);
+        // Obtenemos los servicios actuales en BD
+        const filas = await conexion.query(
+            "SELECT id_servicio FROM tab_anuncio_servicio WHERE id_anuncio = ?",
+            [id_anuncio]
+        );
 
-        // Respuesta de éxito
-        return response.status(201).json({
-            message: `Se han guardado con éxito ${resultado.affectedRows} servicios para el anuncio ${id_anuncio}.`,
-            detalles: resultado
+
+        if (!Array.isArray(filas)) {
+            return response.status(500).json({ message: "Error al obtener servicios actuales." });
+        }
+
+        const serviciosActuales = filas.map(f => f.id_servicio);
+
+        // Calculamos qué agregar y qué eliminar
+        const agregar  = serviciosNuevos.filter(id => !serviciosActuales.includes(id));
+        const eliminar = serviciosActuales.filter(id => !serviciosNuevos.includes(id));
+
+        console.log("Servicios a agregar:", agregar);
+        console.log("Servicios a eliminar:", eliminar);
+
+        // Solo insertamos los nuevos
+        for (const id_servicio of agregar) {
+            await conexion.query(
+                "INSERT INTO tab_anuncio_servicio SET ?",
+                { id_anuncio, id_servicio }
+            );
+            console.log("Servicio agregado: " + id_servicio);
+        }
+
+        // Solo eliminamos los que ya no están
+        for (const id_servicio of eliminar) {
+            await conexion.query(
+                "DELETE FROM tab_anuncio_servicio WHERE id_anuncio = ? AND id_servicio = ?",
+                [id_anuncio, id_servicio]
+            );
+        }
+
+        return response.json({
+            message: "Servicios actualizados correctamente.",
+            agregados: agregar.length,
+            eliminados: eliminar.length
         });
 
     } catch (error) {
-        // Manejo de errores específicos
-        if (error.code === 'ER_DUP_ENTRY') {
-            return response.status(409).json({ 
-                message: "Error: Uno o más servicios ya están asignados a este anuncio." 
-            });
-        }
-
-        mensaje_error(response, "Error al guardar la colección de servicios.", error);
+        console.error("Error en post_servicios_anuncio:", error);
+        return response.status(500).json({ 
+            message: "Error interno del servidor.", 
+            error: error.message 
+        });
     } finally {
         if (conexion) await conexion.end();
     }
@@ -99,5 +120,5 @@ const post_serviciosAnuncios = async (request, response) => {
 export const metodos = {
     get_tipos,
     get_serviciosAnuncio,
-    post_serviciosAnuncios
+    post_servicios_anuncio
 };

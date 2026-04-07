@@ -42,7 +42,7 @@ const get_anuncios_incompletos = async (request, response) => {
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query("SELECT id_anuncio,titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,precio,direccion,latitud,longitud FROM tab_anuncio WHERE id_usuario = ? AND " +
             "(titulo IS NULL OR descripcion IS NULL OR num_habitaciones IS NULL OR num_camas IS NULL OR num_banos IS NULL OR id_alojamiento IS NULL OR precio IS NULL OR direccion IS NULL OR  latitud IS NULL OR " +
-            "longitud IS NULL);", [id_usuario]);
+            "longitud IS NULL OR status = 4);", [id_usuario]);
 
         //Llamado a función que muestra y envía el resultado de las consultas.
         return mensaje_GET(response, resultado);
@@ -184,7 +184,7 @@ const get_AnuncioInfo = async (request, response) => {
         if (id_anuncio == undefined) {
             return response.status(400).json({ message: "Solicitud no valida: Por favor ingrese el 'id' del anuncio." });
         }
-        else if (id_usuario == undefined){
+        else if (id_usuario == undefined) {
             return response.status(400).json({ message: "Solicitud no valida: usuario no encontrado." });
         }
 
@@ -196,7 +196,7 @@ const get_AnuncioInfo = async (request, response) => {
                     ,id_alojamiento AS tipo_alojamiento, id_usuario AS usuario, precio, direccion, latitud, longitud, status AS estado_anuncio
                     FROM tab_anuncio 
                     WHERE id_anuncio = ? 
-                    AND id_usuario = ?`, [id_anuncio,id_usuario]);
+                    AND id_usuario = ?`, [id_anuncio, id_usuario]);
 
         // Verificamos si se obtuvo algún registro.
         return mensaje_GET(response, resultado);
@@ -281,7 +281,7 @@ const get_publicaciones = async (request, response) => {
         const resultado = await conexion.query(`
                 SELECT id_anuncio, titulo, descripcion, precio, habitaciones, camas, banos, direccion, tipo_alojamiento, estado_anuncio
                 FROM vista_card_anuncios 
-                WHERE usuario = ?`,[id_usuario]);
+                WHERE usuario = ?`, [id_usuario]);
 
         // Verificamos si se obtuvieron los registros con los anuncios publicados.
         return mensaje_GET(response, resultado);
@@ -307,8 +307,10 @@ const post_anuncios = async (request, response) => {
             return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
         }
 
+        var status = 4; // Variable que indica el estado del anuncio en este caso incompleto.
+
         // Almacenamos las variables que se registrarán en la base de datos.
-        const datos = { id_usuario, id_alojamiento };
+        const datos = { id_usuario, id_alojamiento, status };
 
         // Conexión al servidor. "await" indica que debe esperar que se complete esta sección del código para continuar.
         conexion = await inicio_conexion();
@@ -343,12 +345,12 @@ const put_anuncios = async (request, response) => {
 
     try {
         const camposPermitidos = ['titulo', 'descripcion', 'num_habitaciones', 'num_camas', 'num_banos', 'id_alojamiento', 'precio', 'status'];
-        
+
         // Validación para comprobar existencia de datos.
         if (id_anuncio == undefined) {
             response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
         }
-        
+
         // Creamos  las variables que se actualizarán en la base de datos. Solo agregamos al objeto lo que realmente viene en el request.
         for (const key in body) {
             if (camposPermitidos.includes(key) && body[key] !== undefined && body[key] !== null) {

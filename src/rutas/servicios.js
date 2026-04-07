@@ -8,6 +8,6 @@ const  router = Router();
 // Asignacion de rutas al enrutador.
 router.get("/servicios", controles_servicios.get_tipos);
 router.get("/servicios/:id_anuncio", controles_servicios.get_serviciosAnuncio);
-router.post("/servicios/insertar", controles_servicios.post_serviciosAnuncios);
+router.post("/servicios/insertar", controles_servicios.post_servicios_anuncio);
 
 export default router;
