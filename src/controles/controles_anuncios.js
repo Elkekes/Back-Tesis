@@ -295,6 +295,35 @@ const get_publicaciones = async (request, response) => {
     }
 };
 
+// Petición asincrona de días y horarios de atención para determinado anuncio.
+const get_Atencion = async (request, response) => {
+    const { id_anuncio } = request.params;
+    let conexion;
+    try {
+        // Validación para comprobar la existencia de datos.
+        if (id_anuncio == undefined) {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
+        }
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query(`
+            SELECT lunes, martes, miercoles, jueves, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2
+            FROM tab_dias_atencion 
+            WHERE id_anuncio = ?`, [id_anuncio]);
+
+        // Verificamos si se obtenieron los registro.
+        return mensaje_GET(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "Error en la optención del último anuncio", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
 //------------------------------------------------------------Peticiones POST (Inserción de un nuevo Anuncio)---------------------------------------------------------------------
 
 // Petición asincrona para agregar un usuario.
@@ -700,6 +729,7 @@ export const metodos = {
     get_numero_activos,
     get_numero_tipo,
     get_anuncios_filtro,
+    get_Atencion,
     post_anuncios,
     put_anuncios_direccion,
     put_tipoalojamiento,
