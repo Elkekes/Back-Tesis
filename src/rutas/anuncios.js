@@ -24,6 +24,7 @@ router.get("/anuncios/numero/activos", controles_anuncios.get_numero_activos); /
 router.get("/anuncios/numero/:tipo_alojamiento", controles_anuncios.get_numero_tipo); // Ruta para consultar total de anuncios por filtro "Tipo_anuncio"
 router.get("/anuncios/publicados/filtrar/:tipo_anuncio", controles_anuncios.get_anuncios_filtro);
 router.post("/anuncios/publicar", controles_anuncios.post_anuncios);
+router.post("/anuncios/dias/atencion", controles_anuncios.post_diasAtencion_anuncio);
 router.put("/anuncios/:id_anuncio", controles_anuncios.put_anuncios);
 router.put("/anuncios/tipoalojamiento/:id_anuncio", controles_anuncios.put_tipoalojamiento);
 router.put("/anuncios/cantidades/:id_anuncio", controles_anuncios.put_cantidades);

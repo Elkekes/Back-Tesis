@@ -40,9 +40,13 @@ const get_anuncios_incompletos = async (request, response) => {
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_anuncio,titulo,descripcion,num_habitaciones,num_camas,num_banos,id_alojamiento,precio,direccion,latitud,longitud FROM tab_anuncio WHERE id_usuario = ? AND " +
-            "(titulo IS NULL OR descripcion IS NULL OR num_habitaciones IS NULL OR num_camas IS NULL OR num_banos IS NULL OR id_alojamiento IS NULL OR precio IS NULL OR direccion IS NULL OR  latitud IS NULL OR " +
-            "longitud IS NULL OR status = 4);", [id_usuario]);
+        const resultado = await conexion.query(`
+            SELECT id_anuncio, titulo, descripcion, num_habitaciones, num_camas, num_banos, id_alojamiento, precio,direccion, latitud,longitud 
+            FROM tab_anuncio 
+            WHERE id_usuario = ? AND (titulo IS NULL OR descripcion IS NULL OR num_habitaciones IS NULL OR num_camas IS NULL OR
+                num_banos IS NULL OR id_alojamiento IS NULL OR precio IS NULL OR direccion IS NULL OR  latitud IS NULL OR
+                longitud IS NULL OR status = 4)
+            LIMIT 1`, [id_usuario]);
 
         //Llamado a función que muestra y envía el resultado de las consultas.
         return mensaje_GET(response, resultado);
@@ -308,7 +312,7 @@ const get_Atencion = async (request, response) => {
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(`
-            SELECT lunes, martes, miercoles, jueves, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2
+            SELECT lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2
             FROM tab_dias_atencion 
             WHERE id_anuncio = ?`, [id_anuncio]);
 
@@ -358,6 +362,56 @@ const post_anuncios = async (request, response) => {
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+// Petición asíncrona para guardar los dias & horarios de atención de un anuncio.
+const post_diasAtencion_anuncio = async (request, response) => {
+    let conexion;
+    try {
+        const { id_anuncio, dias: diasAtencion } =  request.body;
+
+        console.log("Id del anuncio: ", id_anuncio );
+        console.log("Datos enviados: ", request.body );
+
+        // Validación de datos
+        if (!id_anuncio || !diasAtencion) {
+            return response.status(400).json({ message: "Faltan datos en la petición." });
+        }
+
+        const { lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2 } = diasAtencion; // Desestructuramos los campos del objeto
+
+        conexion = await inicio_conexion();
+
+        // Obtenemos los servicios actuales en BD
+        const filas = await conexion.query(
+            "SELECT lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2 FROM tab_dias_atencion WHERE id_anuncio = ?",
+            [id_anuncio]
+        );
+
+        if (filas.length === 0) { // Condición en caso de no haber registros previos.
+            const resultado = await conexion.query( // Agregamos los nuevos datos en la BD.
+                "INSERT INTO tab_dias_atencion SET ?", 
+                { id_anuncio, lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2 }
+            );
+            return mensaje_POST(response, resultado); // Mensage de respuesta. // Mensage de respuesta. 
+        }
+        else{ // Caso con registros previos en la BD.
+            const resultado = await conexion.query( // Agregamos los nuevos datos en la BD.
+                "UPDATE tab_dias_atencion SET lunes=?, martes=?, miercoles=?, jueves=?, viernes=?, sabado=?, domingo=?, inicio_1=?, fin_1=?, inicio_2=?, fin_2=? WHERE id_anuncio = ?",
+                [lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2, id_anuncio]
+            );
+               
+            return mensaje_PUT(response, resultado); // Mensage de respuesta. 
+        }      
+    } catch (error) {
+        console.error("Error en el servicio de horarios de atención:", error);
+        return response.status(500).json({
+            message: "Error interno del servidor.",
+            error: error.message
+        });
+    } finally {
+        if (conexion) await conexion.end();
     }
 };
 
@@ -731,6 +785,7 @@ export const metodos = {
     get_anuncios_filtro,
     get_Atencion,
     post_anuncios,
+    post_diasAtencion_anuncio,
     put_anuncios_direccion,
     put_tipoalojamiento,
     put_cantidades,

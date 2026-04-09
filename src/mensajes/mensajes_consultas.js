@@ -60,7 +60,7 @@ export const mensaje_PUT = (response, resultado) => {
     else{
         console.log("Anuncio actualizado correctamente:", resultado); // Se muestra el resultado en consola
         return response.status(200).json({
-        status: "success",
+        success: true,
         data: resultado
         }); // Devuelve el resultado completo con estado de completado.
     }

@@ -107,7 +107,7 @@ const post_servicios_anuncio = async (request, response) => {
         });
 
     } catch (error) {
-        console.error("Error en post_servicios_anuncio:", error);
+        console.error("Error en en servicio actualizacón de servicios de anuncio:", error);
         return response.status(500).json({ 
             message: "Error interno del servidor.", 
             error: error.message 
