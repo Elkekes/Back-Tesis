@@ -284,7 +284,7 @@ const get_publicaciones = async (request, response) => {
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(`
                 SELECT id_anuncio, titulo, descripcion, precio, habitaciones, camas, banos, direccion, tipo_alojamiento, estado_anuncio
-                FROM vista_card_anuncios 
+                FROM vista_infototal_anuncios
                 WHERE usuario = ?`, [id_usuario]);
 
         // Verificamos si se obtuvieron los registros con los anuncios publicados.

@@ -1,5 +1,6 @@
 import {inicio_conexion} from "../bd/bd_conexion.js";
 
+
 /*Declaracion Costante que que sirve para trabajar con rutas de archivos y
 directorios de manera segura, independiente del sistema operativo.*/ 
 const path = require('path')
@@ -145,41 +146,64 @@ const delete_imagen = async(request, response) =>
 };
 
 //Procedimiento que realiza la petición para guardar en base de datos información de una imagen.
-const post_imagen_bd = async (request, response,nombreImagen, id_anuncio, num_imagen) => {
+const post_imagen_anuncio = async (request, response) => {
     let conexion;
     try {
-        if (!validarParametros(id_anuncio, num_imagen, nombreImagen)){
+        const { id_anuncio } = request.body;
+
+        // Validación de datos
+        if (!id_anuncio) {
             return response.status(400).json({
                 success: false,
-                message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos requeridos."
+                message: "Falta el id_anuncio."
             });
         }
 
-        const direccion_imagen = `/uploads/${nombreImagen}`;
-        const imagen = { id_anuncio, num_imagen, direccion_imagen };
-        
+        // Verificamos que llegaron archivos
+        if (!request.files || request.files.length === 0) {
+            return response.status(400).json({
+                success: false,
+                message: "No se recibieron imágenes."
+            });
+        }
+
         conexion = await inicio_conexion();
-        const resultado = await conexion.query("INSERT INTO tab_anuncio_imagen SET ?", imagen);
 
-        // Confirmar éxito en la inserción
-        console.log("Imagen guardada correctamente en BD: ", imagen);
+        // Procesamos cada imagen recibida
+        const resultados = [];
+        for (let i = 0; i < request.files.length; i++) {
+            const archivo       = request.files[i];
+            const nombreImagen  = archivo.filename; // Nombre único generado por multer
+            const direccion_imagen = `/uploads/${nombreImagen}`;
+            const num_imagen    = i + 1; // Número de imagen (1, 2, 3...)
 
-        return response.json({ success: true, message: "Imagen subida correctamente.", data: resultado });
-    
+            console.log(`Guardando imagen ${num_imagen}:`, nombreImagen);
+
+            const imagen = { id_anuncio, num_imagen, direccion_imagen };
+            const resultado = await conexion.query(
+                "INSERT INTO tab_anuncio_imagen SET ?", imagen
+            );
+
+            resultados.push(resultado);
+        }
+
+        return response.json({
+            success: true,
+            message: `${request.files.length} imagen(es) subidas correctamente.`,
+            data: resultados
+        });
+
     } catch (error) {
-        // Código de respuesta HTTP: Errores de los servidores.
-        console.error("Error al guardar la imagen en BD:", error);
-        return response.status(500).json({ success: false, message: "Error en la carga de la imagen", error: error.message });
+        console.error("Error al guardar imágenes:", error);
+        return response.status(500).json({
+            success: false,
+            message: "Error al guardar las imágenes.",
+            error: error.message
+        });
+    } finally {
+        if (conexion) await conexion.end();
     }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
 };
-
-//Funcion
-const validarParametros = (id_anuncio, num_imagen, nombreImagen) => {
-    return id_anuncio && num_imagen && nombreImagen;
-}
 
 // Petición asincrónica para subir una imagen al servidor.
 const post_imagen_serv = async (request, response,) => {
@@ -197,7 +221,7 @@ const post_imagen_serv = async (request, response,) => {
             return response.status(400).json({ success: false, message: "Faltan parámetros en la solicitud." });
         }
 
-        //Llamada al procedimiento que realiza la incerción de datos en la BD.
+        //Llamada al procedimiento que realiza la inserción de datos en la BD.
         await post_imagen_bd(request, response, nombreImagen, id_anuncio, num_imagen);
 
     } catch (error) {
@@ -210,7 +234,7 @@ const post_imagen_serv = async (request, response,) => {
 export const metodos = {
     get_imagenes,
     get_imagen_principal,
-    post_imagen_serv,
+    post_imagen_anuncio,
     put_imagen,
     delete_imagen,
 };

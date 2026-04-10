@@ -1,10 +1,7 @@
 import express from "express";
-import { init_conexion } from "./bd/bd_conexion.js";
 import morgan from "morgan";
 import path from "path";
 import cors from 'cors';
-import multer from "multer";
-import { v4 as uuidv4 } from 'uuid';
 
 
 // Importación de las rutas.
@@ -19,30 +16,6 @@ import rutas_reservacion from "./rutas/reservacion.js";
 import rutas_maps from "./rutas/maps.js";
 import rutas_servicios from "./rutas/servicios.js";
 
-// Configuración de guardado de la imagen.
-const storage = multer.diskStorage({
-    destination: path.join(__dirname, 'public/uploads'),
-    filename: function (req, file, cb) {
-        // Se Utiliza el nombre original proporcionado por Multer para optener la extensión original.
-        const ext = path.extname(file.originalname);
-        //Por ultimo se concatena el nombre aleatorio + exención.
-        cb(null, uuidv4() + ext);
-    }
-});
-
-// Filtros para el guardado de la imagen.
-const fileFilter = (req, file, cb) => {
-    // Solo se permitan las extensiones que deseas (jpg, png, etc.)
-    const allowedExtensions = ['.jpg', '.jpeg', '.png'];
-    const ext = path.extname(file.originalname).toLowerCase();
-
-    if (allowedExtensions.includes(ext)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Tipo de archivo no permitido'));
-    }
-};
-
 // Inicialización
 const app = express();
 
@@ -53,12 +26,15 @@ app.set("port", 4000);
 app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
-app.use(multer({
+
+/*app.use(multer({
     storage: storage,
     fileFilter: fileFilter,
     dest: path.join(__dirname,'public/uploads'),
-    limits: {fileSize: 10000000}
+    limits: {fileSize: 5 * 1024 * 1024} // Límite de 5MB por imagen
 }).single('imagen'));
+*/
+
 
 // Rutas.
 app.use("/", rutas_perfil);
