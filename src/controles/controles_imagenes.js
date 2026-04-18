@@ -1,96 +1,89 @@
-import {inicio_conexion} from "../bd/bd_conexion.js";
-
+import { inicio_conexion } from "../bd/bd_conexion.js";
 
 /*Declaracion Costante que que sirve para trabajar con rutas de archivos y
-directorios de manera segura, independiente del sistema operativo.*/ 
+directorios de manera segura, independiente del sistema operativo.*/
 const path = require('path')
 
 //Declaración del eliminador archivos de manera asíncrona usando.
 const { unlink } = require('fs').promises;
 
 // Petición asincrona de todas las imagenes relacionadas a un anuncio.
-const get_imagenes = async(request, response) =>
-{
+const get_imagenes = async (request, response) => {
     let conexion;
-    try{
+    try {
         console.log(request.params)
-        const {id} = request.params;
+        const { id } = request.params;
         // Validación para comprobar existencia de datos.
-        if (id == undefined )
-        {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
+        if (id == undefined) {
+            response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen  FROM tab_anuncio_imagen WHERE id_anuncio = ? ", id );
-    
+        const resultado = await conexion.query("SELECT id_imagen,num_imagen,direccion_imagen  FROM tab_anuncio_imagen WHERE id_anuncio = ? ", id);
+
         console.log(resultado);
         // Mostramos el resutlado en el navegador en formato Json.
         response.json(resultado);
-    }catch(error){
+    } catch (error) {
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.menssage);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    }   
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona de la imagen principal relacionada a un anuncio.
-const get_imagen_principal = async(request, response) =>
-{
+const get_imagen_principal = async (request, response) => {
     let conexion;
-    try{
+    try {
         console.log(request.params)
-        const {id} = request.params;
+        const { id } = request.params;
 
         // Validación para comprobar existencia de datos.
-        if (id == undefined )
-        {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
+        if (id == undefined) {
+            response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
         }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_imagen, id_anuncio, direccion_imagen  FROM tab_anuncio_imagen WHERE num_imagen = 1 " );
-    
+        const resultado = await conexion.query("SELECT id_imagen, id_anuncio, direccion_imagen FROM tab_anuncio_imagen LIMIT 1 ");
+
         console.log(resultado);
         // Mostramos el resutlado en el navegador en formato Json.
         response.json(resultado);
-    }catch(error){
+    } catch (error) {
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.message);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    }   
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 
 
 // Petición asincrona para actualizar una imagen.
-const put_imagen = async(request, response) =>
-{
+const put_imagen = async (request, response) => {
     let conexion;
-    try{
+    try {
         //Creamos  las variables que se actualizarán en la base de datos.
-        const {id_anuncio, num_imagen, direccion_imagen} = request.body;
+        const { id_anuncio, num_imagen, direccion_imagen } = request.body;
         console.log(request.params)
-        const {direccion} = request.params;
+        const { direccion } = request.params;
 
         // Validación para comprobar existencia de datos.
-        if (direccion == undefined )
-        {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio."});
+        if (direccion == undefined) {
+            response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
         }
 
         // Almacenamos las variables que se actualizarán en la base de datos.
-        const imagen = {id_anuncio, num_imagen, direccion_imagen};
+        const imagen = { id_anuncio, num_imagen, direccion_imagen };
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
@@ -99,33 +92,39 @@ const put_imagen = async(request, response) =>
         console.log(resultado);
         // Mostramos el resutlado en el navegador en formato Json.
         response.json(resultado);
-    }catch(error){
+    } catch (error) {
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.message);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    }   
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 // Petición asincrona para eliminar un solo anuncio.
-const delete_imagen = async(request, response) =>
-{
+const delete_imagen = async (request, response) => {
     let conexion;
     try {
-        const url = request.query.url;
-        if (!url){
-            return response.status(400).json({ error: 'Falta el parametro url' });
+        // Extraemos específicamente la propiedad 'url' del objeto body
+        const { url } = request.body;
+
+        console.log("url recibida: ", url);
+
+        // Verificamos que 'url' exista y sea un string
+        if (!url || typeof url !== 'string') {
+            return response.status(400).json({ error: 'Falta el parámetro url o no es válido' });
         }
-        
-        const imagePath = path.join(__dirname, '..', 'public', 'uploads', path.basename(url));
+
+        const imagePath = path.join(__dirname, '..', 'public', 'uploads', path.basename(url)); // Asignamos la ubicación exacta dentro del servidor para eliminar el archivo.
 
         try {
             await unlink(imagePath);
             console.log("archivo borrado: ", imagePath);
         } catch (err) {
-            console.warn("No se pudo borrar el archivo (puede que no exista):", err.message);
+            //console.warn("No se pudo borrar el archivo (puede que no exista):", err.message);
+            console.error("ERROR REAL:", err.code); // Esto te dirá si es 'ENOENT' (no encontrado) o 'EPERM' (permisos)
+            console.error("RUTA INTENTADA:", imagePath);
         }
 
         conexion = await inicio_conexion();
@@ -141,8 +140,8 @@ const delete_imagen = async(request, response) =>
         return response.status(500).json({ error: "Error al eliminar la imagen.", detalle: error.message });
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 };
 
 //Procedimiento que realiza la petición para guardar en base de datos información de una imagen.
@@ -172,10 +171,10 @@ const post_imagen_anuncio = async (request, response) => {
         // Procesamos cada imagen recibida
         const resultados = [];
         for (let i = 0; i < request.files.length; i++) {
-            const archivo       = request.files[i];
-            const nombreImagen  = archivo.filename; // Nombre único generado por multer
-            const direccion_imagen = `/uploads/${nombreImagen}`;
-            const num_imagen    = i + 1; // Número de imagen (1, 2, 3...)
+            const archivo = request.files[i];
+            const nombreImagen = archivo.filename; // Nombre único generado por multer
+            const direccion_imagen = `uploads/${nombreImagen}`;
+            const num_imagen = i + 1; // Número de imagen (1, 2, 3...)
 
             console.log(`Guardando imagen ${num_imagen}:`, nombreImagen);
 
@@ -207,7 +206,7 @@ const post_imagen_anuncio = async (request, response) => {
 
 // Petición asincrónica para subir una imagen al servidor.
 const post_imagen_serv = async (request, response,) => {
-     try {
+    try {
         console.log("Solicitud recibida para subir imagen:", request.params);
 
         if (!request.file) {
