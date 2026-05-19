@@ -369,10 +369,10 @@ const post_anuncios = async (request, response) => {
 const post_diasAtencion_anuncio = async (request, response) => {
     let conexion;
     try {
-        const { id_anuncio, dias: diasAtencion } =  request.body;
+        const { id_anuncio, dias: diasAtencion } = request.body;
 
-        console.log("Id del anuncio: ", id_anuncio );
-        console.log("Datos enviados: ", request.body );
+        console.log("Id del anuncio: ", id_anuncio);
+        console.log("Datos enviados: ", request.body);
 
         // Validación de datos
         if (!id_anuncio || !diasAtencion) {
@@ -391,19 +391,19 @@ const post_diasAtencion_anuncio = async (request, response) => {
 
         if (filas.length === 0) { // Condición en caso de no haber registros previos.
             const resultado = await conexion.query( // Agregamos los nuevos datos en la BD.
-                "INSERT INTO tab_dias_atencion SET ?", 
+                "INSERT INTO tab_dias_atencion SET ?",
                 { id_anuncio, lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2 }
             );
             return mensaje_POST(response, resultado); // Mensage de respuesta. // Mensage de respuesta. 
         }
-        else{ // Caso con registros previos en la BD.
+        else { // Caso con registros previos en la BD.
             const resultado = await conexion.query( // Agregamos los nuevos datos en la BD.
                 "UPDATE tab_dias_atencion SET lunes=?, martes=?, miercoles=?, jueves=?, viernes=?, sabado=?, domingo=?, inicio_1=?, fin_1=?, inicio_2=?, fin_2=? WHERE id_anuncio = ?",
                 [lunes, martes, miercoles, jueves, viernes, sabado, domingo, inicio_1, fin_1, inicio_2, fin_2, id_anuncio]
             );
-               
+
             return mensaje_PUT(response, resultado); // Mensage de respuesta. 
-        }      
+        }
     } catch (error) {
         console.error("Error en el servicio de horarios de atención:", error);
         return response.status(500).json({
@@ -695,7 +695,7 @@ const buscar_anuncios = async (request, response) => {
         const terminoLimpio = termino ? termino.trim() : '';
         const terminoLike = `%${terminoLimpio}%`;
 
-        let query = `SELECT * FROM vista_card_anuncios WHERE 1=1`;
+        let query = `SELECT * FROM vista_card_anuncios WHERE 1=1 AND estado_anuncio = 'Activo'`;
         let params = [];
 
         if (terminoLimpio) {
@@ -703,15 +703,17 @@ const buscar_anuncios = async (request, response) => {
             params.push(terminoLike, terminoLike, terminoLike);
         }
 
-        // SOLO LOGS ESENCIALES
+        // SOLO FILTROS ESENCIALES
         if (tipos && tipos.trim() !== '') {
-            const tiposArray = tipos.split(',');
-            const tiposNumeros = tiposArray.filter(tipo => !isNaN(tipo) && tipo.trim() !== '');
+            // Separamos por comas y limpiamos espacios de cada palabra
+            const tiposArray = tipos.split(',').map(t => t.trim()).filter(t => t !== '');
 
-            if (tiposNumeros.length > 0) {
-                const placeholders = tiposNumeros.map(() => '?').join(',');
-                query += ` AND id_alojamiento IN (${placeholders})`;
-                params.push(...tiposNumeros);
+            if (tiposArray.length > 0) {
+                const placeholders = tiposArray.map(() => '?').join(',');
+
+                query += ` AND tipo_alojamiento IN (${placeholders}) `; // Encadenamos a la consulta la validacón de tipos de alojamientos.
+
+                params.push(...tiposArray);
             }
         }
 
@@ -723,7 +725,7 @@ const buscar_anuncios = async (request, response) => {
 
         const resultado = await conexion.query(query, params);
 
-        console.log('🏠 Resultados encontrados:', resultado.length);
+        console.log('Resultados encontrados:', resultado.length);
 
         if (!resultado || resultado.length === 0) {
             let mensaje = "No se encontraron anuncios";

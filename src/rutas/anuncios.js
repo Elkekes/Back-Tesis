@@ -34,11 +34,10 @@ router.put("/anuncios/status/:id_anuncio", controles_anuncios.put_status);
 router.delete("/anuncios/:id_anuncio", controles_anuncios.delete_anuncios);
 
 
-// router.get("/anuncios/buscar/:termino?", (req, res, next) => {
-//     console.log('🔍 RUTA /anuncios/buscar EJECUTADA');
-//     console.log('📝 Parámetros:', req.params);
-//     console.log('🔍 Query:', req.query);
-//     next();
-// }, controles_anuncios.buscar_anuncios);
+router.get("/anuncios/buscar/:termino?", (req, res, next) => {
+     console.log('Parámetros:', req.params);
+     console.log('Query:', req.query);
+     next();
+ }, controles_anuncios.buscar_anuncios);
 
 export default router;
