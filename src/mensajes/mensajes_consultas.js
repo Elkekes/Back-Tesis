@@ -11,11 +11,11 @@ export const mensaje_error = (response, mensajePersonalizado, error) => {
 
 //Funcion que devuelve un mensaje de error o exíto al realizar las consultas "POST".
 export const mensaje_POST = (response, resultado) => {
-    const Consulta_SinExito = "No due posible agregar los datos a la tabla.";
+    const Consulta_SinExito = "No fue posible agregar los datos a la tabla.";
 
     if (resultado.length === 0) { // Condicional en caso de no encontrar resultados.
         console.warn(`${Consulta_SinExito}`);
-        return response.status(404).json({
+        return response.status(409).json({
             message: Consulta_SinExito,
             success: false,
             data: resultado,
@@ -39,7 +39,7 @@ export const mensaje_GET = (response, resultado) => {
     if (resultado.length === 0 && response.status != 400) { // Condicional en caso de no encontrar resultados.
         console.warn(`${Consulta_SinExito}`);
         console.log("Resultado query:", resultado);
-        return response.status(200).json({
+        return response.status(404).json({
             success: false,
             data: resultado,
             count: resultado.length
@@ -57,7 +57,7 @@ export const mensaje_GET = (response, resultado) => {
 
 //Funcion que devuelve un mensaje de error o exíto al realizar una actualización "PUT".
 export const mensaje_PUT = (response, resultado) => {
-    const Consulta_SinExito = " No se pudo actualizar el anuncio (valide que el indicador exista).";
+    const Consulta_SinExito = " No se pudo realizar la actualización (valide que el indicador exista).";
 
     if (resultado.affectedRows === 0) { // Condicional en caso de no encontrar resultados.
         console.warn(`${Consulta_SinExito}`);
@@ -69,7 +69,7 @@ export const mensaje_PUT = (response, resultado) => {
         });
     }
     else {
-        console.log("Anuncio actualizado correctamente:", resultado); // Se muestra el resultado en consola
+        console.log("Actualizado correctamente:", resultado); // Se muestra el resultado en consola
         return response.status(200).json({
             success: true,
             data: resultado,
@@ -85,11 +85,19 @@ export const mensaje_DELETE = (response, resultado) => {
 
     if (resultado.length === 0) { // Condicional en caso de no encontrar resultados.
         console.warn(`${Consulta_SinExito}`);
-        return response.status(404).json({ message: Consulta_SinExito });
+        return response.status(404).json({ 
+            message: Consulta_SinExito,
+            data: resultado,
+            count: resultado.length
+        });
     }
     else {
         console.log("Resultado de la eliminación:", resultado); // Se muestra el resultado en consola
-        return response.json(resultado); // Devuelve el resultado completo.
+        return response.status(200).json({
+            success: true,
+            data: resultado,
+            resultado
+        }); // Devuelve el resultado completo.
     }
 
 };

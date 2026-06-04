@@ -1,155 +1,53 @@
-import {inicio_conexion} from "./../bd/bd_conexion.js";
+import { inicio_conexion } from "./../bd/bd_conexion.js";
 
 // Petición asincrona de todos los perfiles de usuario.
-const get_perfiles = async(request, response) =>
-{
+const get_usuarios = async (request, response) => {
     let conexion;
-    try{
+    try {
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT id_usuario, nick_name, nombre, apellido_1, apellido_2, correo, numero_tel, fecha_registro, hora_registro FROM tab_perfil_usuario");
-        //response.json("Mensaje de prueba jsjsjsjsj");
+        const resultado = await conexion.query("SELECT id_usuario, nombre, apellido_1, apellido_2, correo, numero_tel, fecha_registro, hora_registro FROM tab_perfil_usuario");
         console.log(resultado);
         // Mostramos el resutlado en el navegador en formato Json.
         response.json(resultado);
-    }catch(error){
+    } catch (error) {
         // Código de respuesta hhtp:  Errores de los servidores. 
         response.status(500);
         response.send(error.messaje);
     }
     finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    }  
-};
-
-// Petición asincrona para optener solo un usuario.
-const get_perfil = async(request, response) =>
-{
-    let conexion;
-    try{
-        console.log(request.params)
-        const {id} = request.params;
-
-        // Validación para comprobar existencia de datos.
-        if (id == undefined )
-        {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
-        }
-
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("SELECT nick_name,correo, contrasena FROM tab_perfil_usuario WHERE id_usuario = ?", id); // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
-        console.log(resultado);
-        // Mostramos el resutlado en el navegador en formato Json.
-        response.json(resultado);
-    }catch(error){
-        // Código de respuesta hhtp:  Errores de los servidores. 
-        response.status(500);
-        response.send(error.messaje);
+        if (conexion) await conexion.end(); // Cierre de la conexión.
     }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    }  
 };
 
-// Petición asincrona para actualizar el perfil de un usuario.
-const put_perfil = async(request, response) =>
-{
-    let conexion;
-    try{
-        //Creamos  las variables que se actualizarán en la base de datos
-        const {nick_name, nombre, apellido_1, apellido_2, numero_tel} = request.body;
-        console.log(request.params)
-        const {id} = request.params;
-
-        // Validación para comprobar existencia de datos
-        if (id == undefined )
-        {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
-        }
-
-        // Almacenamos las variables que se actualizarán en la base de datos.
-        const perfil = {nick_name, nombre, apellido_1, apellido_2, numero_tel};
-
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        //Actualización SQl a la tabla. 
-        const resultado = await conexion.query("UPDATE tab_perfil_usuario SET ? WHERE id_usuario = ?", [perfil, id]);
-        console.log(resultado);
-        // Mostramos el resutlado en el navegador en formato Json.
-        response.json(resultado);
-    }catch(error){
-        // Código de respuesta hhtp:  Errores de los servidores. 
-        response.status(500);
-        response.send(error.messaje);
-    }
-    finally {
-        //si la conexion esta abierta, entonces la cerramos
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
-};
-
-// Petición asincrona para eliminar solo un usuario.
-const delete_perfil = async(request, response) =>
-{
-    let conexion;
-    try{
-        console.log(request.params)
-        const {id} = request.params;
-
-        // Validación para comprobar existencia de datos.
-        if (id == undefined )
-        {
-            response.status(400).json({message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos."});
-        }
-
-        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
-        conexion = await inicio_conexion();
-        // Consulta SQl a la tabla. 
-        const resultado = await conexion.query("DELETE FROM tab_perfil_usuario WHERE id_usuario = ?", id); // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
-        console.log(resultado);
-        // Mostramos el resutlado en el navegador en formato Json.
-        response.json(resultado);
-    }catch(error){
-        // Código de respuesta hhtp:  Errores de los servidores. 
-        response.status(500);
-        response.send(error.messaje);
-    }
-    finally {
-    if (conexion) await conexion.end(); // Cierre de la conexión.
-    } 
-};
-
-
-// En controles_perfil.js - función get_usuario_actual
-const get_usuario_actual = async (request, response) => {
+// Método para optener datos del usuario actual loggeado
+const get_usuario = async (request, response) => {
     let conexion;
     try {
         // Obtener el UID del query parameter
-        const { uid } = request.query;
-        
+        const { id_usuario } = request.params;
+
         // console.log('🔍 UID recibido:', uid); // Para debug
-        
-        if (!uid) {
-            return response.status(400).json({ 
-                success: false, 
-                message: "Se requiere el UID del usuario" 
+
+        if (!id_usuario) {
+            return response.status(400).json({
+                success: false,
+                message: "Se requiere el UID del usuario"
             });
         }
-        
+
         conexion = await inicio_conexion();
-        
+
         const resultado = await conexion.query(
             `SELECT id_usuario, nombre, apellido_1, apellido_2, numero_tel, id_pais, id_estado 
-                FROM tab_perfil_usuario WHERE id_usuario = ?`, 
-            [uid]  // ← Buscar por UID de Firebase
+                FROM tab_perfil_usuario WHERE id_usuario = ?`,
+            [id_usuario]  // ← Buscar por UID de Firebase
         );
 
-        // ✅ CORRECCIÓN: Manejar diferentes formatos de respuesta de la BD
+        // CORRECCIÓN: Manejar diferentes formatos de respuesta de la BD
         let filas = [];
-        
+
         if (Array.isArray(resultado)) {
             // Si el resultado es un array directamente
             filas = resultado;
@@ -162,73 +60,41 @@ const get_usuario_actual = async (request, response) => {
         }
 
         if (!filas || filas.length === 0) {
-            return response.status(404).json({ 
-                success: false, 
-                message: "Usuario no encontrado" 
+            return response.status(404).json({
+                success: false,
+                message: "Usuario no encontrado"
             });
         }
-        
-        response.json({ 
-            success: true, 
-            data: filas[0] 
+
+        response.json({
+            success: true,
+            data: filas[0]
         });
 
-    } catch(error) {
+    } catch (error) {
         console.error("Error:", error);
-        response.status(500).json({ 
-            success: false, 
-            message: "Error del servidor" 
+        response.status(500).json({
+            success: false,
+            message: "Error del servidor"
         });
 
     } finally {
         if (conexion) await conexion.end();
-    }  
+    }
 };
 
-// ✅ Actualizar perfil del usuario actual
-const put_usuario_actual = async (request, response) => {
-    let conexion;
-    try {
-        const { id_usuario, nombre, apellido_1, apellido_2, numero_tel, id_pais, id_estado } = request.body;
-        
-        // ⚠️ IMPORTANTE: Validar que el usuario solo pueda actualizar su propio perfil
-        // Por ahora asumimos que viene el id_usuario correcto
-        
-        conexion = await inicio_conexion();
-        
-        const [resultado] = await conexion.query(
-            `UPDATE tab_perfil_usuario 
-            SET nombre = ?, apellido_1 = ?, apellido_2 = ?, numero_tel = ?, id_pais = ?, id_estado = ?
-                WHERE id_usuario = ?`,
-            [nombre, apellido_1, apellido_2, numero_tel, id_pais, id_estado, id_usuario]
-        );
-        
-        response.json({ 
-            success: true, 
-            message: "Perfil actualizado correctamente",
-            data: resultado 
-        });
-        
-    } catch(error) {
-        console.error("Error:", error);
-        response.status(500).json({ 
-            success: false, 
-            message: "Error actualizando perfil" 
-        });
-    } finally {
-        if (conexion) await conexion.end();
-    } 
-};
-
-// ✅ Obtener todos los países
+// Obtener todos los países
 const get_paises = async (request, response) => {
     let conexion;
     try {
         conexion = await inicio_conexion();
+        const { idPais } = [42, 55];
+
         const resultado = await conexion.query(
-            "SELECT id_pais, nombre_pais, codigo FROM tab_pais"
+            "SELECT id_pais, nombre_pais, codigo FROM tab_pais WHERE id_pais = ?",
+            [idPais]
         );
-        
+
         console.log('Paises: ', resultado);
         let paises = [];
         if (Array.isArray(resultado))
@@ -243,54 +109,160 @@ const get_paises = async (request, response) => {
             }
         );
 
-    } catch(error) {
+    } catch (error) {
         console.error("Error:", error);
-        response.status(500).json({ 
-            success: false, 
-            message: "Error cargando países" 
+        response.status(500).json({
+            success: false,
+            message: "Error cargando países"
         });
     } finally {
         if (conexion) await conexion.end();
-    }  
+    }
 };
 
-// ✅ Obtener estados por país
+// Obtener estados por país
 const get_estados_por_pais = async (request, response) => {
     let conexion;
     try {
         const { idPais } = request.params;
-        
+
         conexion = await inicio_conexion();
         const [resultado] = await conexion.query(
             "SELECT id_estado, id_pais, nombre_estado FROM tab_estado WHERE id_pais = ?",
             [idPais]
         );
-        
-        response.json({ 
-            success: true, 
-            data: resultado 
+
+        response.json({
+            success: true,
+            data: resultado
         });
-        
-    } catch(error) {
+
+    } catch (error) {
         console.error("Error:", error);
-        response.status(500).json({ 
-            success: false, 
-            message: "Error cargando estados" 
+        response.status(500).json({
+            success: false,
+            message: "Error cargando estados"
         });
     } finally {
         if (conexion) await conexion.end();
-    }  
+    }
 };
 
 
-export const metodos = {
-    get_perfiles,
-    get_perfil,
-    put_perfil,
-    delete_perfil,
+// Petición asincrona para actualizar el perfil de un usuario.
+const post_perfil = async (request, response) => {
+    let conexion;
+    try {
+        // Creamos  las variables que se actualizarán en la base de datos
+        const { id_usuario } = request.params;
 
-    get_usuario_actual,      // ← AGREGAR
-    put_usuario_actual,
+        // Validación para comprobar existencia de datos
+        if (id_usuario == undefined) {
+            response.status(500).json({ message: "SOLICITUD NO VÁLIDA: PORFABOR INGRESE TODOS LOS DATOS." });
+        }
+
+        // Almacenamos las variables que se actualizarán en la base de datos.
+        const perfil = { id_usuario };
+
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        //Actualización SQl a la tabla. 
+        const resultado = await conexion.query("POST tab_perfil_usuario SET ? ", [id_usuario]);
+
+        // Mostramos el resutlado en el navegador en formato Json.
+        return mensaje_POST(response, resultado);
+
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "Error al registrar el nuevo usuario. ", error);
+    }
+    finally {
+        //si la conexion esta abierta, entonces la cerramos
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+// Petición asincrona para actualizar un anuncio exeptuando la direccón.
+const put_usuario_actual = async (request, response) => {
+    let conexion;
+    // Asignamos el id del anuncio proporcionado en la URl.
+    const { id_usuario } = request.body;
+
+    const body = request.body;
+    const usuario = {};
+
+    try {
+        const camposPermitidos = [ 'id_usuario', 'nombre', 'apellido_1', 'apellido_2', 'numero_tel', 'id_pais', 'id_estado'];
+
+        // Validación para comprobar existencia de datos.
+        if (id_usuario == undefined) {
+            response.status(500).json({ 
+                success: false,
+                message: "SOLICITUD NO VÁLIDA: IDENTIFICADOR DE USUARIO INVÁLIDO." 
+
+            });
+        }
+
+        // Creamos  las variables que se actualizarán en la base de datos. Solo agregamos al objeto lo que realmente viene en el request.
+        for (const key in body) {
+            if (camposPermitidos.includes(key) && body[key] !== undefined && body[key] !== null) {
+                usuario[key] = body[key];
+            }
+        }
+
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        //Actualización SQl a la tabla. 
+        const resultado = await conexion.query("UPDATE tab_perfil_usuario SET ? WHERE id_usuario = ?", [usuario, id_usuario]);
+
+        // Verificamos si se actualizó algún registro.
+        return mensaje_PUT(response, resultado);
+
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "Error en la actrualización del perfil. ", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+
+// Petición asincrona para eliminar solo un usuario.
+const delete_perfil = async (request, response) => {
+    let conexion;
+    try {
+        const { id } = request.params;
+
+        // Validación para comprobar existencia de datos.
+        if (id == undefined) {
+            response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos." });
+        }
+
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        const resultado = await conexion.query("DELETE FROM tab_perfil_usuario WHERE id_usuario = ?", id); // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
+        console.log(resultado);
+        // Mostramos el resutlado en el navegador en formato Json.
+        response.json(resultado);
+    } catch (error) {
+        // Código de respuesta hhtp:  Errores de los servidores. 
+        response.status(500);
+        response.send(error.messaje);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+};
+
+export const metodos = {
+    get_usuarios,
+    get_usuario,
     get_paises,
-    get_estados_por_pais
+    get_estados_por_pais,
+    post_perfil,
+    put_usuario_actual,
+    delete_perfil
 };
