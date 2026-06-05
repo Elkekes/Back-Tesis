@@ -9,7 +9,7 @@ const  router = Router();
 router.get("/perfiles/usuarios", controles_perfil.get_usuarios);
 router.get("/perfil/:id_usuario", controles_perfil.get_usuario);
 router.post("/perfil/:id_usuario", controles_perfil.post_perfil);
-router.put("actualizar/perfil",controles_perfil.put_usuario_actual);
+router.put("/actualizar/perfil",controles_perfil.put_usuario_actual);
 router.delete("/perfil/:id", controles_perfil.delete_perfil);
 
 router.get("/paises", controles_perfil.get_paises);

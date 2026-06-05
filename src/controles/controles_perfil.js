@@ -1,4 +1,6 @@
 import { inicio_conexion } from "./../bd/bd_conexion.js";
+import { mensaje_error, mensaje_POST, mensaje_GET, mensaje_PUT, mensaje_DELETE } from "../mensajes/mensajes_consultas.js";
+
 
 // Petición asincrona de todos los perfiles de usuario.
 const get_usuarios = async (request, response) => {
@@ -40,7 +42,7 @@ const get_usuario = async (request, response) => {
         conexion = await inicio_conexion();
 
         const resultado = await conexion.query(
-            `SELECT id_usuario, nombre, apellido_1, apellido_2, numero_tel, id_pais, id_estado 
+            `SELECT nombre, apellido_1, apellido_2, numero_tel, id_pais, id_estado 
                 FROM tab_perfil_usuario WHERE id_usuario = ?`,
             [id_usuario]  // ← Buscar por UID de Firebase
         );
@@ -88,27 +90,17 @@ const get_paises = async (request, response) => {
     let conexion;
     try {
         conexion = await inicio_conexion();
-        const { idPais } = [42, 55];
+
+        const  paises = [42, 55];
 
         const resultado = await conexion.query(
-            "SELECT id_pais, nombre_pais, codigo FROM tab_pais WHERE id_pais = ?",
-            [idPais]
+            "SELECT id_pais, nombre_pais, codigo FROM tab_pais WHERE id_pais IN (?)",
+            [paises]
         );
 
         console.log('Paises: ', resultado);
-        let paises = [];
-        if (Array.isArray(resultado))
-            paises = resultado;
-        else if (resultado && Array.isArray(resultado[0]))
-            paises = resultado[0];
-
-        response.json(
-            {
-                success: true,
-                data: paises
-            }
-        );
-
+        
+       return mensaje_GET(response, resultado);
     } catch (error) {
         console.error("Error:", error);
         response.status(500).json({
@@ -126,16 +118,14 @@ const get_estados_por_pais = async (request, response) => {
     try {
         const { idPais } = request.params;
 
+        console.log("Pais seleccionado: ", idPais);
         conexion = await inicio_conexion();
-        const [resultado] = await conexion.query(
+        const resultado = await conexion.query(
             "SELECT id_estado, id_pais, nombre_estado FROM tab_estado WHERE id_pais = ?",
             [idPais]
         );
 
-        response.json({
-            success: true,
-            data: resultado
-        });
+        return mensaje_GET(response, resultado);
 
     } catch (error) {
         console.error("Error:", error);
@@ -193,7 +183,7 @@ const put_usuario_actual = async (request, response) => {
     const usuario = {};
 
     try {
-        const camposPermitidos = [ 'id_usuario', 'nombre', 'apellido_1', 'apellido_2', 'numero_tel', 'id_pais', 'id_estado'];
+        const camposPermitidos = [ 'nombre', 'apellido_1', 'apellido_2', 'numero_tel', 'id_pais', 'id_estado'];
 
         // Validación para comprobar existencia de datos.
         if (id_usuario == undefined) {
