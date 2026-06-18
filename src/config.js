@@ -5,6 +5,7 @@ config();// Permite utilizar las variables de entorno declaras en el archivo ".e
 export default{
     host: process.env.HOST || "",
     database: process.env.DATABASE || "",
+    //port:process.env.PORT || "",
     user: process.env.DB_USER || "",
     password: process.env.PASSWORD || "",
     googleMapsApiKey: process.env.APIKEY_GOOGLE_MAPS || "",
