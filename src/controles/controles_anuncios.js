@@ -419,18 +419,16 @@ const post_diasAtencion_anuncio = async (request, response) => {
 
 // Petición asincrona para actualizar un anuncio exeptuando la direccón.
 const put_anuncios = async (request, response) => {
-    let conexion;
-    // Asignamos el id del anuncio proporcionado en la URl.
-    const { id_anuncio } = request.params;
-
-    const body = request.body;
-    const anuncio = {};
-
+    let conexion; // Declaramos la variable de conexión con la base de datos.
     try {
+        // Asignamos el id del anuncio proporcionado en la URl.
+        const { id_anuncio } = request.params; // Guardamos el id de la reservacion mandado en la url.
+        const body = request.body; // Almacenmos en un obgeto los valores mandados en el cuerpó de la solicitud.
+        const anuncio = {}; // Objeto que almacenara los datos a guardar en la base de datos.
         const camposPermitidos = ['titulo', 'descripcion', 'num_habitaciones', 'num_camas', 'num_banos', 'id_alojamiento', 'precio', 'status'];
 
         // Validación para comprobar existencia de datos.
-        if (id_anuncio == undefined) {
+        if (id_anuncio == undefined || id_reservacion === null || id_reservacion === '') {
             response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese el 'id' del anuncio." });
         }
 
