@@ -66,10 +66,10 @@ const get_reservacion_inquilino = async (request, response) => {
     let conexion;
     try {
         console.log(request.params)
-        const { id_inquilino } = request.params;
+        const { id_usuario } = request.params;
 
         // Validación para comprobar existencia de datos.
-        if (id_inquilino == undefined || id_inquilino === null || id_inquilino === '') {
+        if (id_usuario == undefined || id_usuario === null || id_usuario === '') {
            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese los parámetros necesarios." });
         }
 
@@ -81,7 +81,7 @@ const get_reservacion_inquilino = async (request, response) => {
                                                 id_reservacion, anuncio, propietario, inquilino, fecha_solicitud, hora_solicitud, fecha_cita, hora_cita, 
                                                 confirmacion_propietario, confirmacion_inquilino, estado
                                                 FROM vista_reservacion
-                                                WHERE inquilino = ?`, id_inquilino);
+                                                WHERE inquilino = ?`, id_usuario);
 
         //  ConsoeLog en consola de los datos devueltos
         console.log(resultado);
@@ -101,10 +101,10 @@ const get_reservacion_propietario = async (request, response) => {
     let conexion;
     try {
         console.log(request.params)
-        const { id_propietario } = request.params;
+        const { id_usuario } = request.params;
 
         // Validación para comprobar existencia de datos.
-        if (id_propietario  == undefined || id_propietario  === null || id_propietario  === '') {
+        if (id_usuario  == undefined || id_usuario  === null || id_usuario  === '') {
            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese los parámetros necesarios." });
         }
 
@@ -116,7 +116,7 @@ const get_reservacion_propietario = async (request, response) => {
                                                 id_reservacion, anuncio, propietario, inquilino, fecha_solicitud, hora_solicitud, fecha_cita, hora_cita, 
                                                 confirmacion_propietario, confirmacion_inquilino, estado
                                                 FROM vista_reservacion
-                                                WHERE propietario = ?`, id_propietario );
+                                                WHERE propietario = ?`, id_usuario );
 
         //  ConsoeLog en consola de los datos devueltos
         console.log(resultado);

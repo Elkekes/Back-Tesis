@@ -16,8 +16,7 @@ const get_notificaciones = async (request, response) => {
                                                 id_notificacion, descripcion, id_anuncio, titulo_anuncio, fecha, hora, id_usuario, visualizacion
                                                 FROM vista_notificacion 
                                                 WHERE id_usuario = ?
-                                                AND (visualizacion IS NULL OR visualizacion = 0)`,
-            [id_usuario]);
+                                                AND (visualizacion IS NULL OR visualizacion = 0)`,[id_usuario]);
 
         // Log en consola de los datos devueltos
         console.log(resultado);
