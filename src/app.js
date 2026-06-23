@@ -15,7 +15,7 @@ import rutas_historial_logs from "./rutas/historial_logs.js";
 import rutas_reservacion from "./rutas/reservacion.js";
 import rutas_maps from "./rutas/maps.js";
 import rutas_servicios from "./rutas/servicios.js";
-
+import rutas_notificaciones from "./rutas/notificaciones.js"
 // Inicialización
 const app = express();
 
@@ -47,6 +47,7 @@ app.use("/", rutas_historial_logs);
 app.use("/", rutas_reservacion);
 app.use("/", rutas_maps);
 app.use("/", rutas_servicios);
+app.use("/", rutas_notificaciones);
 
 // Archivos estaticos
 app.use(express.static(path.join(__dirname, 'public')));

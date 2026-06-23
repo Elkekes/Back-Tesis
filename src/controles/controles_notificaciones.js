@@ -1,22 +1,48 @@
 import { inicio_conexion } from "./../bd/bd_conexion.js";
 import { mensaje_error, mensaje_POST, mensaje_GET, mensaje_PUT, mensaje_DELETE } from "../mensajes/mensajes_consultas.js";
 
-// Petición asincrona de todos las reservaciones.
+// Petición asincrona de todos las notificaciones.
 const get_notificaciones = async (request, response) => {
     let conexion;
     try {
         console.log(request.params)// Mensage en consola con los datos enviados en la url.
         const { id_usuario } = request.params;// Guardamos el id de la reservacion mandado en la url.
 
+        // Validación para comprobar existencia de datos.
+        if (id_usuario == undefined || id_usuario === null || id_usuario === '') {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese los parámetros necesarios." });
+
+        }
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
 
+        await conexion.query("SET lc_time_names = 'es_MX';");
+
+        /*
+        %W: Nombre completo del día de la semana (Lunes, Martes, etc.).
+
+        %e: Número del día del mes sin ceros a la izquierda (1, 2, ... 15, etc.).
+
+        %M: Nombre completo del mes (Enero, Febrero, Junio, etc.).
+
+        %H: Hora en formato de dos dígitos de 24 horas (00 a 23).
+
+        %h: Hora en formato de dos dígitos de 12 horas (00 a 12).
+
+        %p: Formato AM/PM
+
+        %i: Minutos con dos dígitos (00 a 59).
+        */
+
         // Consulta SQl a la tabla. 
-        const resultado = await conexion.query(`SELECT
-                                                id_notificacion, descripcion, id_anuncio, titulo_anuncio, fecha, hora, id_usuario, visualizacion
-                                                FROM vista_notificacion 
-                                                WHERE id_usuario = ?
-                                                AND (visualizacion IS NULL OR visualizacion = 0)`,[id_usuario]);
+        const resultado = await conexion.query(
+            `SELECT 
+            id_notificacion, descripcion, titulo, DATE_FORMAT(fecha_cita, '%W, %e de %M') AS fecha_cita, TIME_FORMAT(hora_cita, '%h:%i %p') AS hora_cita, id_usuario, visualizacion
+            FROM vista_notificacion 
+            WHERE id_usuario = ?
+            AND (visualizacion IS NULL OR visualizacion = 0)`,
+            [id_usuario]
+        );
 
         // Log en consola de los datos devueltos
         console.log(resultado);
