@@ -54,7 +54,7 @@ const get_reservacion = async (request, response) => {
         return mensaje_GET(response, resultado);
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "Error al obtener reservacion:", error);
+        mensaje_error(response, "Error al obtener reservación:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -89,7 +89,7 @@ const get_reservacion_inquilino = async (request, response) => {
         return mensaje_GET(response, resultado);
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "Error al obtener reservacion:", error);
+        mensaje_error(response, "Error al obtener reservación:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -124,12 +124,46 @@ const get_reservacion_propietario = async (request, response) => {
         return mensaje_GET(response, resultado);
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "Error al obtener reservacion:", error);
+        mensaje_error(response, "Error al obtener reservación:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
     }
 };
+
+// Petición para obtener el Identificador del Inquilino en un anuncio.
+const get_idInquilino = async (request, response) => {
+    let conexion;
+    try {
+        console.log(request.params)
+        const { id_reservacion } = request.params;
+
+        // Validación para comprobar existencia de datos.
+        if (id_reservacion  == undefined || id_reservacion  === null || id_reservacion  === '') {
+           return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese los parámetros necesarios." });
+        }
+
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
+        const resultado = await conexion.query(`SELECT
+                                                inquilino
+                                                FROM vista_reservacion
+                                                WHERE id_reservacion = ?`, id_reservacion );
+
+        //  ConsoeLog en consola de los datos devueltos
+        console.log(resultado);
+        // Mostramos el resutlado en el navegador en formato Json.
+        return mensaje_GET(response, resultado);
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "Error al obtener reservación:", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
+}
 
 // Petición asincrona para agrgar una reservacion.
 const post_reservacion = async (request, response) => {
@@ -258,6 +292,7 @@ export const metodos = {
     get_reservacion,
     get_reservacion_inquilino,
     get_reservacion_propietario,
+    get_idInquilino,
     post_reservacion,
     confirmar_reservacion,
     cancelar_reservacion

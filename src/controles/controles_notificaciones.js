@@ -37,7 +37,7 @@ const get_notificaciones = async (request, response) => {
         // Consulta SQl a la tabla. 
         const resultado = await conexion.query(
             `SELECT 
-            id_notificacion, descripcion, titulo, DATE_FORMAT(fecha_cita, '%W, %e de %M') AS fecha_cita, TIME_FORMAT(hora_cita, '%h:%i %p') AS hora_cita, id_usuario, visualizacion
+            id_notificacion,id_reservacion, descripcion, titulo, DATE_FORMAT(fecha_cita, '%W, %e de %M') AS fecha_cita, TIME_FORMAT(hora_cita, '%h:%i %p') AS hora_cita, id_usuario, visualizacion
             FROM vista_notificacion 
             WHERE id_usuario = ?
             AND (visualizacion IS NULL OR visualizacion = 0)`,
@@ -52,7 +52,7 @@ const get_notificaciones = async (request, response) => {
 
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "Error al obtener reservaciones:", error);
+        mensaje_error(response, "Error al obtener notificaciones:", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
@@ -65,7 +65,7 @@ const post_notificacion = async (request, response) => {
     try {
         const body = request.body; // Almacenmos en un obgeto los valores mandados en el cuerpó de la solicitud.
         const notificacion = {}; // Objeto que almacenara los datos a guardar en la base de datos.
-        const camposPermitidos = ['id_tiponotificacion', 'id_reservacion', 'id_usuario', 'visualizacion'];
+        const camposPermitidos = ['id_tipo_notificacion', 'id_reservacion', 'id_usuario', 'visualizacion'];
 
         // Evaluamos si TODOS los elementos de 'camposPermitidos' existen dentro del objeto 'body'.
         const estanTodosLosCampos = camposPermitidos.every(campo =>
@@ -108,28 +108,22 @@ const put_notificacion = async (request, response) => {
     let conexion; // Declaramos la variable de conexión con la base de datos.
     try {
         // Asignamos el id del anuncio proporcionado en la URl.
-        const { id_notificacion } = request.params; // Guardamos el id de la reservacion mandado en la url.
-        const body = request.body; // Almacenmos en un obgeto los valores mandados en el cuerpó de la solicitud.
-        const notificacion = {}; // Objeto que almacenara los datos a guardar en la base de datos.
-        const camposPermitidos = ['visualizacion'];
+        const { id_notificacion } = request.params;// Guardamos el id_notificacion de la notificación mandado en la url.
+        const { visualizacion } = request.body;// Almacenmos en un obgeto los valores mandados en el cuerpó de la solicitud.
 
-        // Validación para comprobar existencia de datos.
-        if (id_notificacion == undefined || id_notificacion === null || id_notificacion === '') {
-            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese los parámetros necesarios." });
-
+        if (id_notificacion === undefined || id_notificacion === null || id_notificacion === '') {
+            return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Parámetros faltantes." });
         }
 
-        // Creamos  las variables que se actualizarán en la base de datos. Solo agregamos al objeto lo que realmente viene en el request.
-        for (const key in body) {
-            if (camposPermitidos.includes(key) && body[key] !== undefined && body[key] !== null) {
-                notificacion[key] = body[key];
-            }
+        // Verificamos que 'visualizacion' sea exactamente 0 o 1. Cualquier otra cosa (null, undefined, un string, un 5) será rechazada.
+        if (visualizacion !== 0 && visualizacion !== 1) {
+            return response.status(400).json({
+                message: "SOLICITUD NO VÁLIDA: El campo no se ha enviado el nuevo estado."
+            });
         }
 
-        // Si el cuerpo venía vacío o sin campos permitidos, evitamos una consulta SQL vacía
-        if (Object.keys(notificacion).length === 0) {
-            return response.status(400).json({ message: "No se proporcionaron campos válidos para actualizar." });
-        }
+        // Almacenamos las variables que se actualizarán en la base de datos.
+        const notificacion = { visualizacion };
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
@@ -141,7 +135,7 @@ const put_notificacion = async (request, response) => {
         return mensaje_PUT(response, resultado);
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
-        mensaje_error(response, "Error en la actualización del anuncio.", error);
+        mensaje_error(response, "Error en la actualización la notificación.", error);
     }
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
