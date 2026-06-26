@@ -163,49 +163,90 @@ const get_idInquilino = async (request, response) => {
     finally {
         if (conexion) await conexion.end(); // Cierre de la conexión.
     }
+} 
+
+// Petición para obtener el Identificador del Inquilino en un anuncio.
+const get_idPropietario = async (request, response) => {
+    let conexion;
+    try {
+        console.log(request.params)
+        const { id_reservacion } = request.params;
+
+        // Validación para comprobar existencia de datos.
+        if (id_reservacion  == undefined || id_reservacion  === null || id_reservacion  === '') {
+           return response.status(400).json({ message: "SOLICITUD NO VÁLIDA: Por favor ingrese los parámetros necesarios." });
+        }
+
+        // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
+        conexion = await inicio_conexion();
+        // Consulta SQl a la tabla. 
+        // Aquí se hace una consulta y se agrega una condicion que comprar con el valor mandado como parametro en el url.
+        const resultado = await conexion.query(`SELECT
+                                                propietario
+                                                FROM vista_reservacion
+                                                WHERE id_reservacion = ?`, id_reservacion );
+
+        //  ConsoeLog en consola de los datos devueltos
+        console.log(resultado);
+        // Mostramos el resutlado en el navegador en formato Json.
+        return mensaje_GET(response, resultado);
+    } catch (error) {
+        //Llamado a función que muestra y envía los posibles errores.
+        mensaje_error(response, "Error al obtener reservación:", error);
+    }
+    finally {
+        if (conexion) await conexion.end(); // Cierre de la conexión.
+    }
 }
 
 // Petición asincrona para agrgar una reservacion.
 const post_reservacion = async (request, response) => {
     let conexion;
     try {
+        const body = request.body; // Almacenmos en un obgeto los valores mandados en el cuerpó de la solicitud.
+        const reservacion = {}; // Objeto que almacenara los datos a guardar en la base de datos.
+        const camposPermitidos = ['id_anuncio', 'id_usuario', 'fecha_cita', 'hora_cita', 'confirmacion_usuario', 'id_estado_reservacion'];// Agrupamos los campos estrictamente obligatorios para el registro
+        
+        // Evaluamos si TODOS los elementos de 'camposPermitidos' existen dentro del objeto 'body'.
+        const estanTodosLosCampos = camposPermitidos.every(campo =>
+            body[campo] !== undefined && body[campo] !== null && body[campo] !== ''
+        );
 
-        // Creamos las variables que se registraran en la base de datos.
-        const { id_anuncio, id_usuario, fecha_cita, hora_cita, confirmacion_usuario, id_estado_reservacion } = request.body;
-
-        // Agrupamos los campos estrictamente obligatorios para el registro
-        const camposObligatorios = [id_anuncio, id_usuario, fecha_cita, hora_cita, confirmacion_usuario, id_estado_reservacion];
-
-        // Evaluamos si alguno es null, undefined, o string vacío
-        const tieneCamposVacios = camposObligatorios.some(campo => campo === undefined || campo === null || campo === '');
-
-        if (tieneCamposVacios) {
-            // Return para que no continue con la consulta a la base de datos
+        // Si falta aunque sea uno solo de los campos requeridos, frenamos la petición de inmediato
+        if (!estanTodosLosCampos) {
             return response.status(400).json({
-                message: "SOLICITUD NO VÁLIDA: Por favor ingrese todos los datos obligatorios."
+                message: "SOLICITUD INCOMPLETA FALTAN DATOS PARA LA SOLICITUD: Todos los campos son obligatorios."
             });
         }
 
-        // Creamos el objeto limpio que coincide exactamente con las columnas de la BD
-        const datosReservacion = {
-            id_anuncio,
-            id_usuario,
-            fecha_cita,
-            hora_cita,
-            confirmacion_usuario,
-            id_estado_reservacion
-        };
+        // Creamos  las variables que se agregarán en la base de datos. Solo agregamos al objeto lo que realmente viene en el request.
+        for (const key in body) {
+            if (camposPermitidos.includes(key)) {
+                reservacion[key] = body[key];
+            }
+        }
 
         // Conexón al servidor "await" indica que debe esperar que se complete esta seccion del código para continuar.   
         conexion = await inicio_conexion();
 
         // Inserción SQl a la tabla. 
-        const resultado = await conexion.query("INSERT INTO tab_reservacion SET ?", datosReservacion);
+        const resultado = await conexion.query("INSERT INTO tab_reservacion SET ?", reservacion);
 
         // ConsoeLog en consola de los datos devueltos
         console.log(resultado);
+
+        /*EXTRACCIÓN CRÍTICA: Obtenemos el ID autoincrementable generado por MySQL 
+        suele venir directo en resultado.insertId o resultado[0].insertId dependiendo de tu configuración exacta de conexion.query.*/
+        const id_reservacion_creada = resultado.insertId || (resultado[0] && resultado[0].insertId);
+        console.log('ID de la reservación creada con éxito:', id_reservacion_creada); // Mnesage en consola del id_reservacion creado.
+
         // Mostramos el resutlado en el navegador en formato Json.
-        return mensaje_POST(response, resultado);
+        return response.status(201).json({
+            success: true,
+            data: resultado,
+            count: resultado.length,
+            id_reservacion: id_reservacion_creada // Devolvemos el dato de la reservación creada.
+        });
     } catch (error) {
         //Llamado a función que muestra y envía los posibles errores.
         mensaje_error(response, "Error al actualizar reservación:", error);
@@ -293,6 +334,7 @@ export const metodos = {
     get_reservacion_inquilino,
     get_reservacion_propietario,
     get_idInquilino,
+    get_idPropietario,
     post_reservacion,
     confirmar_reservacion,
     cancelar_reservacion

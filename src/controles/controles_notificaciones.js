@@ -67,6 +67,7 @@ const post_notificacion = async (request, response) => {
         const notificacion = {}; // Objeto que almacenara los datos a guardar en la base de datos.
         const camposPermitidos = ['id_tipo_notificacion', 'id_reservacion', 'id_usuario', 'visualizacion'];
 
+        console.log(body);
         // Evaluamos si TODOS los elementos de 'camposPermitidos' existen dentro del objeto 'body'.
         const estanTodosLosCampos = camposPermitidos.every(campo =>
             body[campo] !== undefined && body[campo] !== null && body[campo] !== ''
